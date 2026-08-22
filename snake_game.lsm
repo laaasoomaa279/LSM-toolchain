@@ -1,8 +1,5 @@
 fulldev
 
-// -------------------------------------------------------------
-// 1. استيراد دوال Win32 للنوافذ، النصوص، الرسم، والتركيز
-// -------------------------------------------------------------
 extern "user32.dll" fct CreateWindowExA(dwExStyle: Int, lpClassName: String, lpWindowName: String, dwStyle: Int, X: Int, Y: Int, nWidth: Int, nHeight: Int, hWndParent: Int, hMenu: Int, hInstance: Int, lpParam: Int) -> Int;
 extern "user32.dll" fct DestroyWindow(hWnd: Int) -> Int;
 extern "user32.dll" fct GetDC(hWnd: Int) -> Int;
@@ -22,43 +19,34 @@ extern "gdi32.dll"  fct TextOutA(hdc: Int, x: Int, y: Int, lpString: String, c: 
 
 extern "kernel32.dll" fct Sleep(ms: Int) -> void;
 
-// -------------------------------------------------------------
-// 2. محرك اللعبة المتكامل
-// -------------------------------------------------------------
 fct main() -> Int {
     print("========================================");
     print("   LSM Integrated In-Game UI Snake Engine");
     print("========================================");
 
-    // إنشاء النافذة
     let hwnd: Int = CreateWindowExA(
         0, 
         "STATIC", 
         "LSM Snake [In-Game UI & Auto-Pause]", 
-        281739264, // WS_VISIBLE | WS_OVERLAPPEDWINDOW
+        281739264,
         150, 150, 620, 660, 
         0, 0, 0, 0
     );
 
     let hdc: Int = GetDC(hwnd);
 
-    // جعل خلفية النصوص شفافة دائماً (TRANSPARENT = 1)
     SetBkMode(hdc, 1);
 
-    // مصفوفات جسم الثعبان
     let body_x: [Int; 300];
     let body_y: [Int; 300];
 
-    // فراشي الألوان
-    let bgBrush: Int = CreateSolidBrush(1644825);       // داكن
-    let snakeBrush: Int = CreateSolidBrush(3329330);    // أخضر زمردي
-    let foodBrush: Int = CreateSolidBrush(16724786);    // أحمر
+    let bgBrush: Int = CreateSolidBrush(1644825);
+    let snakeBrush: Int = CreateSolidBrush(3329330);
+    let foodBrush: Int = CreateSolidBrush(16724786);
 
     let app_running: Int = 1;
 
-    // حلقة التطبيق الكبرى
     while (app_running == 1) {
-        // تهيئة الجولة الجديدة
         let length: Int = 3;
         body_x[0] = 300; body_y[0] = 320;
         body_x[1] = 280; body_y[1] = 320;
@@ -74,41 +62,30 @@ fct main() -> Int {
         let is_alive: Int = 1;
         let game_over_screen: Int = 0;
 
-        MessageBeep(64); // نغمة البدء
+        MessageBeep(64);
 
-        // حلقة الجولة الحية
         while (is_alive == 1) {
             PeekMessageA(0, hwnd, 0, 0, 1);
 
-            // -------------------------------------------------
-            // 1. ميزة الإيقاف المؤقت إذا خرجت من النافذة (Auto-Pause)
-            // -------------------------------------------------
             let active_win: Int = GetForegroundWindow();
             if (active_win != hwnd) {
-                // إظهار نص الإيقاف المؤقت
-                SetTextColor(hdc, 65535); // أصفر
+                SetTextColor(hdc, 65535);
                 TextOutA(hdc, 240, 280, "[ PAUSED - CLICK TO RESUME ]", 28);
                 Sleep(100);
             } else {
-                // ---------------------------------------------
-                // 2. قراءة أزرار التحكم
-                // ---------------------------------------------
-                if (GetAsyncKeyState(38) != 0) { // UP
+                if (GetAsyncKeyState(38) != 0) {
                     if (dir_y == 0) { dir_x = 0; dir_y = 0 - 20; }
                 }
-                if (GetAsyncKeyState(40) != 0) { // DOWN
+                if (GetAsyncKeyState(40) != 0) {
                     if (dir_y == 0) { dir_x = 0; dir_y = 20; }
                 }
-                if (GetAsyncKeyState(37) != 0) { // LEFT
+                if (GetAsyncKeyState(37) != 0) {
                     if (dir_x == 0) { dir_x = 0 - 20; dir_y = 0; }
                 }
-                if (GetAsyncKeyState(39) != 0) { // RIGHT
+                if (GetAsyncKeyState(39) != 0) {
                     if (dir_x == 0) { dir_x = 20; dir_y = 0; }
                 }
 
-                // ---------------------------------------------
-                // 3. زحزحة أجزاء الجسم
-                // ---------------------------------------------
                 let i: Int = length - 1;
                 while (i > 0) {
                     body_x[i] = body_x[i - 1];
@@ -119,17 +96,11 @@ fct main() -> Int {
                 body_x[0] = body_x[0] + dir_x;
                 body_y[0] = body_y[0] + dir_y;
 
-                // ---------------------------------------------
-                // 4. فحص الموت: الجدران (تبدأ من Y=40 لمنطقة الـ Score)
-                // ---------------------------------------------
                 if (body_x[0] < 0) { is_alive = 0; }
                 if (body_x[0] >= 600) { is_alive = 0; }
                 if (body_y[0] < 40) { is_alive = 0; }
                 if (body_y[0] >= 600) { is_alive = 0; }
 
-                // ---------------------------------------------
-                // 5. فحص الموت: عض الذيل
-                // ---------------------------------------------
                 let k: Int = 1;
                 while (k < length) {
                     if (body_x[0] == body_x[k]) {
@@ -140,9 +111,6 @@ fct main() -> Int {
                     k = k + 1;
                 }
 
-                // ---------------------------------------------
-                // 6. التقاط الطعام وتحديث النتيجة
-                // ---------------------------------------------
                 if (body_x[0] == food_x) {
                     if (body_y[0] == food_y) {
                         score = score + 10;
@@ -154,23 +122,16 @@ fct main() -> Int {
                     }
                 }
 
-                // ---------------------------------------------
-                // 7. الرسم الكامل للعبة وشريط النتيجة
-                // ---------------------------------------------
-                // مسح الشاشة
                 SelectObject(hdc, bgBrush);
                 Rectangle(hdc, 0, 0, 600, 600);
 
-                // رسم شريط الرأس بالأعلى (Top Header Line)
-                SetTextColor(hdc, 16777215); // أبيض
+                SetTextColor(hdc, 16777215);
                 TextOutA(hdc, 20, 10, "LSM SNAKE 2026", 14);
                 TextOutA(hdc, 450, 10, "SCORE: [ +10/Apple ]", 20);
 
-                // رسم الطعام
                 SelectObject(hdc, foodBrush);
                 Rectangle(hdc, food_x, food_y, food_x + 18, food_y + 18);
 
-                // رسم الثعبان
                 SelectObject(hdc, snakeBrush);
                 let j: Int = 0;
                 while (j < length) {
@@ -180,43 +141,35 @@ fct main() -> Int {
                     j = j + 1;
                 }
 
-                // ضبط سرعة الإطار
                 Sleep(70);
             }
         }
 
-        // -----------------------------------------------------
-        // 8. شاشة Game Over الداخلية مع زر الإعادة (بدون نوافذ Pop-up)
-        // -----------------------------------------------------
-        MessageBeep(16); // صوت الموت
+        MessageBeep(16);
         game_over_screen = 1;
 
         while (game_over_screen == 1) {
             PeekMessageA(0, hwnd, 0, 0, 1);
 
-            // رسم لوحة الموت بالمنتصف
             SelectObject(hdc, bgBrush);
             Rectangle(hdc, 100, 200, 500, 400);
 
-            // النصوص الداخلية
-            SetTextColor(hdc, 255); // أحمر
+            SetTextColor(hdc, 255);
             TextOutA(hdc, 245, 230, "G A M E   O V E R", 17);
 
-            SetTextColor(hdc, 65535); // أصفر
+            SetTextColor(hdc, 65535);
             TextOutA(hdc, 170, 280, "PRESS [ SPACE ] OR [ ENTER ] TO RETRY", 37);
 
-            SetTextColor(hdc, 12632256); // رمادي
+            SetTextColor(hdc, 12632256);
             TextOutA(hdc, 210, 330, "PRESS [ ESC ] TO EXIT GAME", 26);
 
-            // فحص زر الإعادة (Space = 32, Enter = 13)
-            if (GetAsyncKeyState(32) != 0) { // SPACE
+            if (GetAsyncKeyState(32) != 0) {
                 game_over_screen = 0;
             }
-            if (GetAsyncKeyState(13) != 0) { // ENTER
+            if (GetAsyncKeyState(13) != 0) {
                 game_over_screen = 0;
             }
 
-            // فحص زر الخروج (ESC = 27)
             if (GetAsyncKeyState(27) != 0) {
                 game_over_screen = 0;
                 app_running = 0;
@@ -226,7 +179,6 @@ fct main() -> Int {
         }
     }
 
-    // تنظيف الموارد
     DeleteObject(bgBrush);
     DeleteObject(snakeBrush);
     DeleteObject(foodBrush);
