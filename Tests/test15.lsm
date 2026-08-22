@@ -2,13 +2,11 @@ fct accumulate_array(size: Int, multiplier: Int) -> Int {
     let buf: [Int; 10];
     let idx: Int = 0;
     
-    // ملء المصفوفة بقيم متسلسلة
     while (idx < size) {
         buf[idx] = (idx + 1) * multiplier;
         idx = idx + 1;
     }
 
-    // جمع القيم
     let sum: Int = 0;
     let j: Int = 0;
     while (j < size) {
@@ -31,5 +29,5 @@ fct main() -> Int {
     print("Result 2 (3 items * 10):");
     print(res2);
 
-    return res1 + res2; // يجب أن يعيد 90
+    return res1 + res2; // 90
 }
