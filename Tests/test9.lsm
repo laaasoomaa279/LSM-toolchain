@@ -1,0 +1,33 @@
+fct evaluate_score(grade: Float) -> Int {
+    if (grade >= 90.0) {
+        return 1; // ممتاز
+    } else {
+        if (grade >= 75.0) {
+            return 2; // جيد جداً
+        } else {
+            if (grade >= 50.0) {
+                return 3; // مقبول
+            } else {
+                return 0; // راسب
+            }
+        }
+    }
+}
+
+fct main() -> Int {
+    let s1: Int = evaluate_score(94.5); // 1
+    let s2: Int = evaluate_score(81.0); // 2
+    let s3: Int = evaluate_score(62.3); // 3
+    let s4: Int = evaluate_score(41.0); // 0
+
+    print("Score 1 (94.5):");
+    print(s1);
+    print("Score 2 (81.0):");
+    print(s2);
+    print("Score 3 (62.3):");
+    print(s3);
+    print("Score 4 (41.0):");
+    print(s4);
+
+    return s1 + s2 + s3 + s4; // 6
+}

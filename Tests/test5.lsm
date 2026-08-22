@@ -1,0 +1,16 @@
+fulldev
+
+fct execute_kernel_primitives() -> Int {
+    unsafe {
+        asm("nop");
+        asm("nop");
+    }
+    return 1;
+}
+
+fct main() -> Int {
+    print("Executing Bare-Metal Unsafe Block...");
+    let status: Int = execute_kernel_primitives();
+    print(status); // يطبع 1
+    return status;
+}

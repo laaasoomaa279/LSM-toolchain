@@ -1,0 +1,23 @@
+fulldev
+
+fct test_hardware_operations() -> Int {
+    let dummy_buffer: [Int; 2];
+    dummy_buffer[0] = 0;
+
+    // استخدام أول عنصر في مصفوفة المكدس كعنوان صالح للاختبار
+    dummy_buffer[0] = 1337;
+    let val: Int = dummy_buffer[0];
+
+    if (val == 1337) {
+        return 42;
+    }
+    return 0;
+}
+
+fct main() -> Int {
+    print("=== Test 14: Bare-Metal Hardware & Volatile Memory ===");
+    let status: Int = test_hardware_operations();
+    print("Status Code:");
+    print(status);
+    return status;
+}

@@ -1,0 +1,19 @@
+fct main() -> Int {
+    let a: Int = 12;
+    let b: Int = 4;
+    let c: Int = a + b * 3 - (a / b); // 12 + 12 - 3 = 21
+
+    let sum: Int = 0;
+    for i in 1..10 {
+        sum = sum + i; // 1 + 2 + ... + 10 = 55
+    }
+
+    if (sum > 50) {
+        print(sum); // يطبع 55
+    } else {
+        print(0);
+    }
+
+    print(c); // يطبع 21
+    return sum;
+}

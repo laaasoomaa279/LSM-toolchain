@@ -1,0 +1,17 @@
+fct accumulate_six(a: Int, b: Int, c: Int, d: Int, e: Int, f: Int) -> Int {
+    return a + b + c + d + e + f;
+}
+
+fct compute_poly(x: Int, c0: Int, c1: Int, c2: Int, c3: Int, c4: Int) -> Int {
+    return c0 + (c1 * x) + (c2 * x * x) + (c3 * x * x * x) + (c4 * x * x * x * x);
+}
+
+fct main() -> Int {
+    let sum6: Int = accumulate_six(10, 20, 30, 40, 50, 60); // 210
+    print(sum6);
+
+    let poly: Int = compute_poly(2, 5, 3, 2, 1, 1); // 5 + 6 + 8 + 8 + 16 = 43
+    print(poly);
+
+    return sum6;
+}

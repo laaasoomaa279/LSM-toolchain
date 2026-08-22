@@ -1,0 +1,24 @@
+extern "kernel32.dll" fct Beep(dwFreq: Int, dwDuration: Int) -> Int;
+extern "kernel32.dll" fct GetTickCount() -> Int;
+extern "kernel32.dll" fct Sleep(dwMilliseconds: Int) -> void;
+
+fct main() -> Int {
+    print("=== Test 13: Advanced Win32 Dynamic FFI ===");
+
+    let start_time: Int = GetTickCount();
+
+    // عزف نغمة تصاعدية عبر سماعة العتاد الداخلية
+    Beep(523, 100); // C5
+    Beep(659, 100); // E5
+    Beep(784, 150); // G5
+
+    Sleep(50);
+
+    let end_time: Int = GetTickCount();
+    let elapsed: Int = end_time - start_time;
+
+    print("Total Execution Time (ms):");
+    print(elapsed);
+
+    return elapsed > 0 ? 1 : 0;
+}

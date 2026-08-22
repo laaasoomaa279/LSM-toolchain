@@ -1,0 +1,11 @@
+fct worker_task() -> Int {
+    print("Worker Task Running in Background!");
+    return 0;
+}
+
+fct main() -> Int {
+    print("Main Starting...");
+    go worker_task();
+    print("Main Finished Spawning!");
+    return 0;
+}

@@ -1,0 +1,23 @@
+fct test_signed_math() -> Int {
+    let a: Int = 100;
+    let b: Int = 7;
+    let remainder: Int = a % b; // 100 % 7 = 2
+
+    let neg: Int = 0 - 50; // -50
+    let pos: Int = 10;
+    let div_res: Int = neg / pos; // -50 / 10 = -5
+
+    let combined: Int = remainder + div_res; // 2 + (-5) = -3
+    print("Remainder 100 % 7:");
+    print(remainder);
+    print("Negative Div Result:");
+    print(div_res);
+    print("Combined Signed Result:");
+    print(combined);
+
+    return combined;
+}
+
+fct main() -> Int {
+    return test_signed_math();
+}

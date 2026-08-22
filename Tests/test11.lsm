@@ -1,0 +1,9 @@
+fct main() -> Int {
+    let x: Int = 10;
+    let y: Float = 3.14;
+    
+    // خطأ نوعي متعمد: محاولة إسناد Float لمتغير Int
+    let bad_assign: Int = y; 
+    
+    return 0;
+}

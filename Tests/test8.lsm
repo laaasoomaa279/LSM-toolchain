@@ -1,0 +1,21 @@
+fct collatz_steps(start: Int) -> Int {
+    let n: Int = start;
+    let steps: Int = 0;
+
+    while (n > 1) {
+        if (n % 2 == 0) {
+            n = n / 2;
+        } else {
+            n = (n * 3) + 1;
+        }
+        steps = steps + 1;
+    }
+    return steps;
+}
+
+fct main() -> Int {
+    print("Collatz steps for 27:");
+    let s: Int = collatz_steps(27); // تتطلب 111 خطوة
+    print(s); // يطبع 111
+    return s;
+}

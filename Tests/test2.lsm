@@ -1,0 +1,16 @@
+fct calculate_circle_area(radius: Float) -> Float {
+    let pi: Float = 3.14159265;
+    return pi * radius * radius;
+}
+
+fct main() -> Int {
+    let r: Float = 5.0;
+    let area: Float = calculate_circle_area(r); // 78.5398
+    print(area);
+
+    let offset: Float = 1.460184;
+    let total: Float = area + offset; // 80.0
+    print(total);
+
+    return 0;
+}

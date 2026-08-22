@@ -1,0 +1,35 @@
+fct accumulate_array(size: Int, multiplier: Int) -> Int {
+    let buf: [Int; 10];
+    let idx: Int = 0;
+    
+    // ملء المصفوفة بقيم متسلسلة
+    while (idx < size) {
+        buf[idx] = (idx + 1) * multiplier;
+        idx = idx + 1;
+    }
+
+    // جمع القيم
+    let sum: Int = 0;
+    let j: Int = 0;
+    while (j < size) {
+        sum = sum + buf[j];
+        j = j + 1;
+    }
+    return sum;
+}
+
+fct main() -> Int {
+    print("=== Test 15: Monomorphized Algorithmic Accumulator ===");
+
+    // 1*2 + 2*2 + 3*2 + 4*2 + 5*2 = 2 + 4 + 6 + 8 + 10 = 30
+    let res1: Int = accumulate_array(5, 2);
+    print("Result 1 (5 items * 2):");
+    print(res1);
+
+    // 1*10 + 2*10 + 3*10 = 10 + 20 + 30 = 60
+    let res2: Int = accumulate_array(3, 10);
+    print("Result 2 (3 items * 10):");
+    print(res2);
+
+    return res1 + res2; // يجب أن يعيد 90
+}

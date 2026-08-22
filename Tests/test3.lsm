@@ -1,0 +1,16 @@
+fct get_max<T>(a: T, b: T) -> T {
+    if (a > b) {
+        return a;
+    }
+    return b;
+}
+
+fct main() -> Int {
+    let max_int: Int = get_max<Int>(42, 99);
+    print(max_int); // يطبع 99
+
+    let max_float: Float = get_max<Float>(13.5, 7.25);
+    print(max_float); // يطبع 13.5
+
+    return max_int;
+}

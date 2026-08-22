@@ -1,0 +1,26 @@
+fct factorial(n: Int) -> Int {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+fct fibonacci(n: Int) -> Int {
+    if (n <= 0) {
+        return 0;
+    }
+    if (n == 1) {
+        return 1;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+fct main() -> Int {
+    let fact5: Int = factorial(5); // 120
+    print(fact5);
+
+    let fib7: Int = fibonacci(7);  // 13
+    print(fib7);
+
+    return fact5 + fib7; // 133
+}

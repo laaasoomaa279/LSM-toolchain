@@ -1,0 +1,39 @@
+fct main() -> Int {
+    print("=== Test 12: Stack Arrays & Bubble Sort ===");
+
+    let numbers: [Int; 6];
+    numbers[0] = 45;
+    numbers[1] = 12;
+    numbers[2] = 89;
+    numbers[3] = 34;
+    numbers[4] = 2;
+    numbers[5] = 67;
+
+    let n: Int = 6;
+    let i: Int = 0;
+    while (i < n - 1) {
+        let j: Int = 0;
+        while (j < n - i - 1) {
+            let left: Int = numbers[j];
+            let next_idx: Int = j + 1;
+            let right: Int = numbers[next_idx];
+            if (left > right) {
+                numbers[j] = right;
+                numbers[next_idx] = left;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+
+    print("Sorted Array:");
+    let k: Int = 0;
+    while (k < n) {
+        print(numbers[k]);
+        k = k + 1;
+    }
+
+    let min_val: Int = numbers[0];
+    let max_val: Int = numbers[5];
+    return min_val + max_val; // 2 + 89 = 91
+}

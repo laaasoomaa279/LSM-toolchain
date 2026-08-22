@@ -1,0 +1,25 @@
+fulldev
+
+fct main() -> Int {
+    print("=== Test 16: ALSM Native Registers Control ===");
+
+    unsafe {
+        // تعبئة مسجلات المعالج مباشرة دون استخدام متغيرات لغة عالية المستوى
+        setreg(rax, 500);
+        setreg(rbx, 250);
+
+        let v1: Int = getreg(rax);
+        let v2: Int = getreg(rbx);
+
+        print("Value in RAX:");
+        print(v1);
+
+        print("Value in RBX:");
+        print(v2);
+
+        if (v1 > v2) {
+            return 100;
+        }
+    }
+    return 0;
+}
