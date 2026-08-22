@@ -47,7 +47,7 @@ LSM Source Code (.lsm)
        │
        ▼
    ELF Linker      ───►  Native Executables / Flat Binaries (.bin / .exe)
-
+```
 ---
 
 ## Building from Source
