@@ -154,7 +154,3 @@ fct write_vga(addr: Int, val: Int) -> void {
 ## License
 
 This project is licensed under the MIT License.
-
-```
-
-```
