@@ -1,0 +1,292 @@
+fulldev
+
+fct _start() -> void {
+    unsafe {
+        let fb = 655360;
+
+        port_out(100, 168);
+        port_out(100, 212);
+        port_out(96, 244);
+
+        let f = 0;
+        while (f < 10) {
+            let st = port_in(100);
+            if (st % 2 == 1) { let dummy = port_in(96); }
+            f = f + 1;
+        }
+
+        let pen_color = 14;
+        let win_visible = 1;
+        let redraw_needed = 1;
+
+        let mx = 160;
+        let my = 100;
+        let old_mx = 160;
+        let old_my = 100;
+        let cycle = 0;
+        let b1 = 0;
+        let b2 = 0;
+        let b3 = 0;
+        let old_btn = 0;
+
+        let cur_bg = 32512;
+
+        while (1 == 1) {
+            if (redraw_needed == 1) {
+                let i = 0;
+                while (i < 64000) {
+                    mmio_write(fb + i, 1);
+                    i = i + 1;
+                }
+
+                let ty = 182;
+                while (ty < 200) {
+                    let tx = 0;
+                    while (tx < 320) {
+                        mmio_write(fb + (ty * 320) + tx, 7);
+                        tx = tx + 1;
+                    }
+                    ty = ty + 1;
+                }
+
+                let lx = 0;
+                while (lx < 320) {
+                    mmio_write(fb + (181 * 320) + lx, 15);
+                    lx = lx + 1;
+                }
+
+                let sy = 184;
+                while (sy < 198) {
+                    let sx = 4;
+                    while (sx < 46) {
+                        mmio_write(fb + (sy * 320) + sx, 8);
+                        sx = sx + 1;
+                    }
+                    sy = sy + 1;
+                }
+
+                if (win_visible == 1) {
+                    let wy = 20;
+                    while (wy < 165) {
+                        let wx = 25;
+                        while (wx < 295) {
+                            mmio_write(fb + (wy * 320) + wx, 15);
+                            wx = wx + 1;
+                        }
+                        wy = wy + 1;
+                    }
+
+                    let hy = 20;
+                    while (hy < 34) {
+                        let hx = 25;
+                        while (hx < 295) {
+                            mmio_write(fb + (hy * 320) + hx, 9);
+                            hx = hx + 1;
+                        }
+                        hy = hy + 1;
+                    }
+
+                    let cy = 22;
+                    while (cy < 32) {
+                        let cx = 281;
+                        while (cx < 292) {
+                            mmio_write(fb + (cy * 320) + cx, 4);
+                            cx = cx + 1;
+                        }
+                        cy = cy + 1;
+                    }
+
+                    let p1_y = 36;
+                    while (p1_y < 46) {
+                        let p1_x = 30;
+                        while (p1_x < 46) {
+                            mmio_write(fb + (p1_y * 320) + p1_x, 4);
+                            p1_x = p1_x + 1;
+                        }
+                        p1_y = p1_y + 1;
+                    }
+
+                    let p2_y = 36;
+                    while (p2_y < 46) {
+                        let p2_x = 50;
+                        while (p2_x < 66) {
+                            mmio_write(fb + (p2_y * 320) + p2_x, 2);
+                            p2_x = p2_x + 1;
+                        }
+                        p2_y = p2_y + 1;
+                    }
+
+                    let p3_y = 36;
+                    while (p3_y < 46) {
+                        let p3_x = 70;
+                        while (p3_x < 86) {
+                            mmio_write(fb + (p3_y * 320) + p3_x, 14);
+                            p3_x = p3_x + 1;
+                        }
+                        p3_y = p3_y + 1;
+                    }
+
+                    let p4_y = 36;
+                    while (p4_y < 46) {
+                        let p4_x = 90;
+                        while (p4_x < 106) {
+                            mmio_write(fb + (p4_y * 320) + p4_x, 11);
+                            p4_x = p4_x + 1;
+                        }
+                        p4_y = p4_y + 1;
+                    }
+
+                    let clr_y = 36;
+                    while (clr_y < 46) {
+                        let clr_x = 120;
+                        while (clr_x < 165) {
+                            mmio_write(fb + (clr_y * 320) + clr_x, 8);
+                            clr_x = clr_x + 1;
+                        }
+                        clr_y = clr_y + 1;
+                    }
+
+                    let in_y = 50;
+                    while (in_y < 160) {
+                        let in_x = 30;
+                        while (in_x < 290) {
+                            mmio_write(fb + (in_y * 320) + in_x, 0);
+                            in_x = in_x + 1;
+                        }
+                        in_y = in_y + 1;
+                    }
+                }
+
+                let bi = 0;
+                while (bi < 16) {
+                    let ox = bi % 4;
+                    let oy = bi / 4;
+                    mmio_write(cur_bg + bi, mmio_read(fb + ((my + oy) * 320) + (mx + ox)));
+                    bi = bi + 1;
+                }
+
+                redraw_needed = 0;
+            }
+
+            let status = port_in(100);
+
+            if ((status % 2 == 1) && ((status / 32) % 2 == 1)) {
+                let data = port_in(96);
+
+                if (cycle == 0) {
+                    b1 = data;
+                    if ((b1 / 8) % 2 == 1) {
+                        cycle = 1;
+                    }
+                } else {
+                    if (cycle == 1) {
+                        b2 = data;
+                        cycle = 2;
+                    } else {
+                        if (cycle == 2) {
+                            b3 = data;
+                            cycle = 0;
+
+                            let r_i = 0;
+                            while (r_i < 16) {
+                                let rox = r_i % 4;
+                                let roy = r_i / 4;
+                                if ((old_my + roy) < 200 && (old_mx + rox) < 320) {
+                                    mmio_write(fb + ((old_my + roy) * 320) + (old_mx + rox), mmio_read(cur_bg + r_i));
+                                }
+                                r_i = r_i + 1;
+                            }
+
+                            let x_sign = (b1 / 16) % 2;
+                            let dx = b2;
+                            if (x_sign == 1) { dx = dx - 256; }
+                            mx = mx + dx;
+
+                            let y_sign = (b1 / 32) % 2;
+                            let dy = b3;
+                            if (y_sign == 1) { dy = dy - 256; }
+                            my = my - dy;
+
+                            if (mx < 0) { mx = 0; }
+                            if (mx > 315) { mx = 315; }
+                            if (my < 0) { my = 0; }
+                            if (my > 195) { my = 195; }
+
+                            let btn = b1 % 2;
+
+                            if (btn == 1) {
+                                if (mx >= 4 && mx <= 46 && my >= 184 && my <= 198) {
+                                    if (win_visible == 0) {
+                                        win_visible = 1;
+                                        redraw_needed = 1;
+                                    }
+                                }
+
+                                if (win_visible == 1) {
+                                    if (mx >= 281 && mx <= 292 && my >= 22 && my <= 32) {
+                                        win_visible = 0;
+                                        redraw_needed = 1;
+                                    }
+
+                                    if (my >= 36 && my <= 46) {
+                                        if (mx >= 30 && mx <= 46)  { pen_color = 4; }
+                                        if (mx >= 50 && mx <= 66)  { pen_color = 2; }
+                                        if (mx >= 70 && mx <= 86)  { pen_color = 14; }
+                                        if (mx >= 90 && mx <= 106) { pen_color = 11; }
+
+                                        if (mx >= 120 && mx <= 165) {
+                                            let clear_y = 50;
+                                            while (clear_y < 160) {
+                                                let clear_x = 30;
+                                                while (clear_x < 290) {
+                                                    mmio_write(fb + (clear_y * 320) + clear_x, 0);
+                                                    clear_x = clear_x + 1;
+                                                }
+                                                clear_y = clear_y + 1;
+                                            }
+                                        }
+                                    }
+
+                                    if (mx >= 30 && mx < 288 && my >= 50 && my < 158) {
+                                        mmio_write(fb + (my * 320) + mx, pen_color);
+                                        mmio_write(fb + (my * 320) + mx + 1, pen_color);
+                                        mmio_write(fb + ((my + 1) * 320) + mx, pen_color);
+                                        mmio_write(fb + ((my + 1) * 320) + mx + 1, pen_color);
+                                    }
+                                }
+                            }
+
+                            old_btn = btn;
+
+                            let s_i = 0;
+                            while (s_i < 16) {
+                                let sox = s_i % 4;
+                                let soy = s_i / 4;
+                                if ((my + soy) < 200 && (mx + sox) < 320) {
+                                    mmio_write(cur_bg + s_i, mmio_read(fb + ((my + soy) * 320) + (mx + sox)));
+                                }
+                                s_i = s_i + 1;
+                            }
+
+                            mmio_write(fb + (my * 320) + mx, 15);
+                            mmio_write(fb + ((my + 1) * 320) + mx, 15);
+                            mmio_write(fb + ((my + 1) * 320) + mx + 1, 15);
+                            mmio_write(fb + ((my + 2) * 320) + mx, 15);
+                            mmio_write(fb + ((my + 2) * 320) + mx + 1, 15);
+                            mmio_write(fb + ((my + 2) * 320) + mx + 2, 15);
+                            mmio_write(fb + ((my + 3) * 320) + mx, 15);
+
+                            old_mx = mx;
+                            old_my = my;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fct main() -> Int {
+    _start();
+    return 0;
+}
