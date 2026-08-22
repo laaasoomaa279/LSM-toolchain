@@ -7,7 +7,6 @@ fct main() -> Int {
 
     let start_time: Int = GetTickCount();
 
-    // عزف نغمة تصاعدية عبر سماعة العتاد الداخلية
     Beep(523, 100); // C5
     Beep(659, 100); // E5
     Beep(784, 150); // G5
