@@ -1,14 +1,14 @@
 fct evaluate_score(grade: Float) -> Int {
     if (grade >= 90.0) {
-        return 1; // ممتاز
+        return 1;
     } else {
         if (grade >= 75.0) {
-            return 2; // جيد جداً
+            return 2;
         } else {
             if (grade >= 50.0) {
-                return 3; // مقبول
+                return 3;
             } else {
-                return 0; // راسب
+                return 0;
             }
         }
     }
