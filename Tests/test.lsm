@@ -1,0 +1,129 @@
+fct fibonacci(n: Int) -> Int {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+fct benchmark_sort() -> Int {
+    let arr: [Int; 16];
+    
+    arr[0] = 45;  arr[1] = 12;  arr[2] = 89;  arr[3] = 3;
+    arr[4] = 67;  arr[5] = 23;  arr[6] = 90;  arr[7] = 11;
+    arr[8] = 54;  arr[9] = 78;  arr[10] = 2;  arr[11] = 99;
+    arr[12] = 34; arr[13] = 61; arr[14] = 8;  arr[15] = 19;
+
+    let n: Int = 16;
+    let i: Int = 0;
+    while (i < n - 1) {
+        let j: Int = 0;
+        while (j < n - i - 1) {
+            if (arr[j] > arr[j + 1]) {
+                let temp: Int = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+
+    if (arr[0] == 2) {
+        if (arr[15] == 99) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+fct benchmark_matrix_mult() -> Int {
+    let checksum: Int = 0;
+    let i: Int = 0;
+    while (i < 20) {
+        let j: Int = 0;
+        while (j < 20) {
+            let k: Int = 0;
+            while (k < 20) {
+                checksum = checksum + ((i * k) + (k * j));
+                k = k + 1;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    return checksum;
+}
+
+fct count_primes_under_100() -> Int {
+    let is_prime: [Int; 100];
+    let i: Int = 0;
+    while (i < 100) {
+        is_prime[i] = 1;
+        i = i + 1;
+    }
+
+    is_prime[0] = 0;
+    is_prime[1] = 0;
+
+    let p: Int = 2;
+    while ((p * p) < 100) {
+        if (is_prime[p] == 1) {
+            let mult: Int = p * p;
+            while (mult < 100) {
+                is_prime[mult] = 0;
+                mult = mult + p;
+            }
+        }
+        p = p + 1;
+    }
+
+    let count: Int = 0;
+    let c: Int = 0;
+    while (c < 100) {
+        if (is_prime[c] == 1) {
+            count = count + 1;
+        }
+        c = c + 1;
+    }
+    return count;
+}
+
+fct main() -> Int {
+    print("==================================================");
+    print("      LSM V1.0.0 Deep Engine Benchmark Suite      ");
+    print("==================================================");
+
+    let fib_result: Int = fibonacci(12);
+    print("[1] Recursion Test: Fibonacci(12) =");
+    print(fib_result);
+    if (fib_result != 144) {
+        print("[FAIL] Unexpected Fibonacci output!");
+        return 1;
+    }
+
+    let sort_result: Int = benchmark_sort();
+    if (sort_result == 1) {
+        print("[2] Array Allocation & Bubble Sort: PASSED");
+    } else {
+        print("[FAIL] Array Sorting Benchmark failed!");
+        return 1;
+    }
+
+    let prime_count: Int = count_primes_under_100();
+    print("[3] Prime Sieve (Primes < 100):");
+    print(prime_count);
+    if (prime_count != 25) {
+        print("[FAIL] Prime Sieve output mismatch!");
+        return 1;
+    }
+
+    let matrix_sum: Int = benchmark_matrix_mult();
+    print("[4] Matrix Compute Workload Checksum:");
+    print(matrix_sum);
+
+    print("==================================================");
+    print("   [SUCCESS] ALL ENGINE BENCHMARKS VALIDATED!     ");
+    print("==================================================");
+
+    return 0;
+}
