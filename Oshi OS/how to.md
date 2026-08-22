@@ -1,54 +1,96 @@
 # Oshi OS
 
-A bare-metal, 64-bit operating system written in **LSM** (a custom systems programming language) with a handcrafted x86 assembly bootloader. Oshi OS boots straight into high-resolution graphics (1920x1080x32bpp) via the Bochs VBE Display Adapter (BGA) and features an integrated desktop environment, interactive terminal shell, persistent file management, text editing, animations, and built-in applications[cite: 8, 12, 13].
+A bare-metal, 64-bit operating system written in **LSM** (a custom systems programming language) with a handcrafted x86 assembly bootloader. Oshi OS boots straight into high-resolution graphics ($1920 \times 1080 \times 32\text{bpp}$) via the Bochs VBE Display Adapter (BGA) and features an integrated desktop environment, interactive terminal shell, persistent file management, text editing, animations, and built-in applications.
 
 ---
 
 ## Key Features
 
 * **Custom 64-Bit Boot Architecture:**
-  * Custom 16-bit Master Boot Record (MBR) enabling 32-bit Protected Mode and transitioning to 64-bit Long Mode[cite: 13].
-  * 4-Level identity paging configured to map full 4GB physical memory address space[cite: 13].
-  * BIOS 8x16 bitmap font extracted directly from interrupt routines to system RAM[cite: 13].
+* Custom 16-bit Master Boot Record (MBR) enabling 32-bit Protected Mode and transitioning to 64-bit Long Mode.
+
+
+* 4-Level identity paging configured to map full 4GB physical memory address space.
+
+
+* BIOS 8x16 bitmap font extracted directly from interrupt routines to system RAM.
+
+
+
+
 * **High-Resolution Graphics Engine:**
-  * Direct frame manipulation targeting 1920x1080 TrueColor (32bpp)[cite: 11, 13].
-  * Hardware double-buffering using dedicated back buffers and linear framebuffers to eliminate artifacts[cite: 11, 13].
-  * Scaled 2x2 typography rendering with fast dirty-rectangle region invalidation[cite: 11].
+* Direct frame manipulation targeting $1920 \times 1080$ TrueColor ($32\text{bpp}$).
+
+
+* Hardware double-buffering using dedicated back buffers and linear framebuffers to eliminate artifacts.
+
+
+* Scaled $2\times2$ typography rendering with fast dirty-rectangle region invalidation.
+
+
+
+
 * **Modular Desktop Launcher (`desktop.lsm`):**
-  * Top status bar displaying real-time system details[cite: 5, 8].
-  * Unified launcher allowing instant context switching between system tools and applications[cite: 5].
+* Top status bar displaying real-time system details.
+
+
+* Unified launcher allowing instant context switching between system tools and applications.
+
+
+
+
 * **Interactive Terminal Shell (`shell.lsm`):**
-  * Integrated prompt and command processor.
-  * Commands for filesystem traversal, file inspection, memory diagnostics, and application management (`help`, `clear`, `list`, `info`, `create`, `edit`, `read`, `delete`, `exit`).
+* Integrated prompt and command processor.
+
+
+* Commands for filesystem traversal, file inspection, memory diagnostics, and application management (`help`, `clear`, `list`, `info`, `create`, `edit`, `read`, `delete`, `exit`).
+
+
+
+
 * **Integrated Apps Suite:**
-  * **Editor (`apps/editor.lsm`):** In-place text editor with disk flush persistence[cite: 6].
-  * **Calculator (`apps/calc.lsm`):** Fixed-point expression evaluator supporting chained arithmetic operations[cite: 4].
-  * **Snake (`apps/snake.lsm`):** Real-time keyboard-driven arcade classic[cite: 3].
-  * **Pac-Man (`apps/pacman.lsm`):** Maze navigation, scoring, dynamic collision checks, and chase AI[cite: 1].
-  * **Oshi Demo (`apps/oshi.lsm`):** Multi-stage animated geometric visualizer[cite: 7].
+* **Editor (`apps/editor.lsm`):** In-place text editor with disk flush persistence.
+
+
+* **Calculator (`apps/calc.lsm`):** Fixed-point expression evaluator supporting chained arithmetic operations.
+
+
+* **Snake (`apps/snake.lsm`):** Real-time keyboard-driven arcade classic.
+
+
+* **Pac-Man (`apps/pacman.lsm`):** Maze navigation, scoring, dynamic collision checks, and chase AI.
+
+
+* **Oshi Demo (`apps/oshi.lsm`):** Multi-stage animated geometric visualizer.
+
+
+
+
 
 ---
 
 ## Directory Structure
 
-├── boot/
-│   └── boot.s           # MBR, BGA configuration, Long Mode switch, Paging setup
+```text
+├── boot.s               # MBR, BGA configuration, Long Mode switch, Paging setup[cite: 13]
 ├── kernel/
-│   ├── fonts.lsm        # Font metrics and glyph bitmap retrieval
-│   ├── fs.lsm           # In-memory storage, allocation tables, and file descriptors
-│   ├── keyboard.lsm     # PS/2 keyboard scancode decoder and non-blocking IO
-│   ├── system.lsm       # Hardware status bar drawing and uptime tracking
-│   └── vga.lsm          # BGA framebuffers, double-buffering, blitting routines
+│   ├── fonts.lsm        # Font metrics and glyph bitmap retrieval[cite: 11]
+│   ├── fs.lsm           # In-memory storage, allocation tables, and file descriptors[cite: 6, 8]
+│   ├── keyboard.lsm     # PS/2 keyboard scancode decoder and non-blocking IO[cite: 1, 3]
+│   ├── system.lsm       # Hardware status bar drawing and uptime tracking[cite: 5, 8]
+│   └── vga.lsm          # BGA framebuffers, double-buffering, blitting routines[cite: 11]
 └── apps/
-    ├── desktop.lsm      # Main launcher environment
-    ├── shell.lsm        # Interactive command-line interface
-    ├── editor.lsm       # File editor
-    ├── calc.lsm         # Fixed-point calculator
-    ├── snake.lsm        # Snake game
-    ├── pacman.lsm       # Pacman game
-    └── oshi.lsm         # Graphics demo visualizer
+    ├── desktop.lsm      # Main launcher environment[cite: 5]
+    ├── shell.lsm        # Interactive command-line interface[cite: 8]
+    ├── editor.lsm       # File editor[cite: 6]
+    ├── calc.lsm         # Fixed-point calculator[cite: 4]
+    ├── snake.lsm        # Snake game[cite: 3]
+    ├── pacman.lsm       # Pacman game[cite: 1]
+    └── oshi.lsm         # Graphics demo visualizer[cite: 7]
 
+```
 
+---
 
 ## System Requirements & Toolchain
 
@@ -96,17 +138,30 @@ qemu-system-x86_64 -drive format=raw,file=oshi_os.img -m 128M -vga std
 
 | Command | Arguments | Description |
 | --- | --- | --- |
-| `help` | None | Lists available shell commands |
-| `clear` | None | Clears terminal canvas and resets buffer cursor |
-| `list` | None | Displays files with metadata and byte sizes |
-| `info` | None | Displays hardware, resolution, and memory parameters |
-| `create` | `<filename>` | Allocates a new empty file entry on storage |
-| `edit` | `<filename>` | Opens interactive editor for text modification |
-| `read` | `<filename>` | Dumps file contents directly to standard terminal output |
-| `delete` | `<filename>` | Removes the target file entry from filesystem records |
-| `exit` | None | Terminates shell session and returns to Desktop environment |
+| `help` | None | Lists available shell commands
 
-```
+ |
+| `clear` | None | Clears terminal canvas and resets buffer cursor
 
-```
+ |
+| `list` | None | Displays files with metadata and byte sizes
 
+ |
+| `info` | None | Displays hardware, resolution, and memory parameters
+
+ |
+| `create` | `<filename>` | Allocates a new empty file entry on storage
+
+ |
+| `edit` | `<filename>` | Opens interactive editor for text modification
+
+ |
+| `read` | `<filename>` | Dumps file contents directly to standard terminal output
+
+ |
+| `delete` | `<filename>` | Removes the target file entry from filesystem records
+
+ |
+| `exit` | None | Terminates shell session and returns to Desktop environment
+
+ |
