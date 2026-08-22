@@ -15,7 +15,7 @@ fct collatz_steps(start: Int) -> Int {
 
 fct main() -> Int {
     print("Collatz steps for 27:");
-    let s: Int = collatz_steps(27); // تتطلب 111 خطوة
-    print(s); // يطبع 111
+    let s: Int = collatz_steps(27); 
+    print(s); // 111
     return s;
 }
