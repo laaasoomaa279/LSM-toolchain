@@ -8,17 +8,17 @@ LSM is a compiled, statically typed systems programming language engineered to p
 
 ## Table of Contents
 
-1. [Top-Level Compilation Directives](https://www.google.com/search?q=%231-top-level-compilation-directives)
-2. [Lexical Structure & Grammar Fundamentals](https://www.google.com/search?q=%232-lexical-structure--grammar-fundamentals)
-3. [Type System & Memory Layouts](https://www.google.com/search?q=%233-type-system--memory-layouts)
-4. [Control Flow & Pattern Matching](https://www.google.com/search?q=%234-control-flow--pattern-matching)
-5. [Functions, Procedures & Methods](https://www.google.com/search?q=%235-functions-procedures--methods)
-6. [Low-Level Intrinsics & Bare-Metal Subsystems](https://www.google.com/search?q=%236-low-level-intrinsics--bare-metal-subsystems)
-7. [Hardware Register Mapping & Assembly Interop](https://www.google.com/search?q=%237-hardware-register-mapping--assembly-interop)
-8. [Foreign Function Interface (FFI)](https://www.google.com/search?q=%238-foreign-function-interface-ffi)
-9. [Concurrency & Task Scheduling](https://www.google.com/search?q=%239-concurrency--task-scheduling)
-10. [Attributes & Meta-Programming Intrinsics](https://www.google.com/search?q=%2310-attributes--meta-programming-intrinsics)
-11. [Complete Operator & Token Precedence Matrix](https://www.google.com/search?q=%2311-complete-operator--token-precedence-matrix)
+1. [Top-Level Compilation Directives](#1-top-level-compilation-directives)
+2. [Lexical Structure & Grammar Fundamentals](#2-lexical-structure--grammar-fundamentals)
+3. [Type System & Memory Layouts](#3-type-system--memory-layouts)
+4. [Control Flow & Pattern Matching](#4-control-flow--pattern-matching)
+5. [Functions, Procedures & Methods](#5-functions-procedures--methods)
+6. [Low-Level Intrinsics & Bare-Metal Subsystems](#6-low-level-intrinsics--bare-metal-subsystems)
+7. [Hardware Register Mapping & Assembly Interop](#7-hardware-register-mapping--assembly-interop)
+8. [Foreign Function Interface (FFI)](#8-foreign-function-interface-ffi)
+9. [Concurrency & Task Scheduling](#9-concurrency--task-scheduling)
+10. [Attributes & Meta-Programming Intrinsics](#10-attributes--meta-programming-intrinsics)
+11. [Complete Operator & Token Precedence Matrix](#11-complete-operator--token-precedence-matrix)
 
 ---
 
