@@ -1,0 +1,251 @@
+fulldev
+
+fct kbd_init() -> void {
+    unsafe {
+        let norm_map  = 131072;
+        let shift_map = 131584;
+        let altgr_map = 132096;
+
+        let i = 0;
+        while (i < 128) {
+            mmio_write(norm_map + i, 0);
+            mmio_write(shift_map + i, 0);
+            mmio_write(altgr_map + i, 0);
+            i = i + 1;
+        }
+
+        // ==========================================
+        // 1. AZERTY NORMAL
+        // ==========================================
+        mmio_write(norm_map + 1, 27);  // ESC
+        mmio_write(norm_map + 2, 38);  // &
+        mmio_write(norm_map + 3, 101); // e (é)
+        mmio_write(norm_map + 4, 34);  // "
+        mmio_write(norm_map + 5, 39);  // '
+        mmio_write(norm_map + 6, 40);  // (
+        mmio_write(norm_map + 7, 45);  // -
+        mmio_write(norm_map + 8, 101); // e (è)
+        mmio_write(norm_map + 9, 95);  // _
+        mmio_write(norm_map + 10, 99); // c (ç)
+        mmio_write(norm_map + 11, 97); // a (à)
+        mmio_write(norm_map + 12, 41); // )
+        mmio_write(norm_map + 13, 61); // =
+        mmio_write(norm_map + 14, 8);  // Backspace
+
+        mmio_write(norm_map + 16, 97);  // a
+        mmio_write(norm_map + 17, 122); // z
+        mmio_write(norm_map + 18, 101); // e
+        mmio_write(norm_map + 19, 114); // r
+        mmio_write(norm_map + 20, 116); // t
+        mmio_write(norm_map + 21, 121); // y
+        mmio_write(norm_map + 22, 117); // u
+        mmio_write(norm_map + 23, 105); // i
+        mmio_write(norm_map + 24, 111); // o
+        mmio_write(norm_map + 25, 112); // p
+        mmio_write(norm_map + 26, 94);  // ^
+        mmio_write(norm_map + 27, 36);  // $
+        mmio_write(norm_map + 28, 10);  // Enter
+
+        mmio_write(norm_map + 30, 113); // q
+        mmio_write(norm_map + 31, 115); // s
+        mmio_write(norm_map + 32, 100); // d
+        mmio_write(norm_map + 33, 102); // f
+        mmio_write(norm_map + 34, 103); // g
+        mmio_write(norm_map + 35, 104); // h
+        mmio_write(norm_map + 36, 106); // j
+        mmio_write(norm_map + 37, 107); // k
+        mmio_write(norm_map + 38, 108); // l
+        mmio_write(norm_map + 39, 109); // m
+        mmio_write(norm_map + 40, 117); // u (ù)
+        mmio_write(norm_map + 41, 42);  // *
+
+        mmio_write(norm_map + 43, 60);  // <
+        mmio_write(norm_map + 44, 119); // w
+        mmio_write(norm_map + 45, 120); // x
+        mmio_write(norm_map + 46, 99);  // c
+        mmio_write(norm_map + 47, 118); // v
+        mmio_write(norm_map + 48, 98);  // b
+        mmio_write(norm_map + 49, 110); // n
+        mmio_write(norm_map + 50, 44);  // ,
+        mmio_write(norm_map + 51, 59);  // ;
+        mmio_write(norm_map + 52, 58);  // :
+        mmio_write(norm_map + 53, 33);  // !
+        mmio_write(norm_map + 57, 32);  // Space
+
+        // Numpad Normal
+        mmio_write(norm_map + 55, 42); // *
+        mmio_write(norm_map + 71, 55); // 7
+        mmio_write(norm_map + 72, 56); // 8
+        mmio_write(norm_map + 73, 57); // 9
+        mmio_write(norm_map + 74, 45); // -
+        mmio_write(norm_map + 75, 52); // 4
+        mmio_write(norm_map + 76, 53); // 5
+        mmio_write(norm_map + 77, 54); // 6
+        mmio_write(norm_map + 78, 43); // +
+        mmio_write(norm_map + 79, 49); // 1
+        mmio_write(norm_map + 80, 50); // 2
+        mmio_write(norm_map + 81, 51); // 3
+        mmio_write(norm_map + 82, 48); // 0
+        mmio_write(norm_map + 83, 46); // .
+
+        // ==========================================
+        // 2. AZERTY SHIFT
+        // ==========================================
+        mmio_write(shift_map + 1, 27);
+        mmio_write(shift_map + 2, 49);  // 1
+        mmio_write(shift_map + 3, 50);  // 2
+        mmio_write(shift_map + 4, 51);  // 3
+        mmio_write(shift_map + 5, 52);  // 4
+        mmio_write(shift_map + 6, 53);  // 5
+        mmio_write(shift_map + 7, 54);  // 6
+        mmio_write(shift_map + 8, 55);  // 7
+        mmio_write(shift_map + 9, 56);  // 8
+        mmio_write(shift_map + 10, 57); // 9
+        mmio_write(shift_map + 11, 48); // 0
+        mmio_write(shift_map + 12, 111);
+        mmio_write(shift_map + 13, 43); // +
+        mmio_write(shift_map + 14, 8);
+
+        mmio_write(shift_map + 16, 65); // A
+        mmio_write(shift_map + 17, 90); // Z
+        mmio_write(shift_map + 18, 69); // E
+        mmio_write(shift_map + 19, 82); // R
+        mmio_write(shift_map + 20, 84); // T
+        mmio_write(shift_map + 21, 89); // Y
+        mmio_write(shift_map + 22, 85); // U
+        mmio_write(shift_map + 23, 73); // I
+        mmio_write(shift_map + 24, 79); // O
+        mmio_write(shift_map + 25, 80); // P
+        mmio_write(shift_map + 28, 10);
+
+        mmio_write(shift_map + 30, 81); // Q
+        mmio_write(shift_map + 31, 83); // S
+        mmio_write(shift_map + 32, 68); // D
+        mmio_write(shift_map + 33, 70); // F
+        mmio_write(shift_map + 34, 71); // G
+        mmio_write(shift_map + 35, 72); // H
+        mmio_write(shift_map + 36, 74); // J
+        mmio_write(shift_map + 37, 75); // K
+        mmio_write(shift_map + 38, 76); // L
+        mmio_write(shift_map + 39, 77); // M
+        mmio_write(shift_map + 40, 37); // %
+
+        mmio_write(shift_map + 43, 62); // >
+        mmio_write(shift_map + 44, 87); // W
+        mmio_write(shift_map + 45, 88); // X
+        mmio_write(shift_map + 46, 67); // C
+        mmio_write(shift_map + 47, 86); // V
+        mmio_write(shift_map + 48, 66); // B
+        mmio_write(shift_map + 49, 78); // N
+        mmio_write(shift_map + 50, 63); // ?
+        mmio_write(shift_map + 51, 46); // .
+        mmio_write(shift_map + 52, 47); // /
+        mmio_write(shift_map + 57, 32);
+
+        // ==========================================
+        // 3. AZERTY ALT GR
+        // ==========================================
+        mmio_write(altgr_map + 2, 126); // ~
+        mmio_write(altgr_map + 3, 35);  // #
+        mmio_write(altgr_map + 4, 123); // {
+        mmio_write(altgr_map + 5, 91);  // [
+        mmio_write(altgr_map + 6, 124); // |
+        mmio_write(altgr_map + 7, 96);  // `
+        mmio_write(altgr_map + 8, 92);  // \
+        mmio_write(altgr_map + 9, 94);  // ^
+        mmio_write(altgr_map + 10, 64); // @
+        mmio_write(altgr_map + 11, 93); // ]
+        mmio_write(altgr_map + 12, 125); // }
+
+        let last_key_mem = 131200; // 0x20080
+        let shift_state  = 131208; // 0x20088
+        let altgr_state  = 131216; // 0x20090
+        let is_ext_state = 131224; // 0x20098
+
+        mmio_write(last_key_mem, 0);
+        mmio_write(shift_state, 0);
+        mmio_write(altgr_state, 0);
+        mmio_write(is_ext_state, 0);
+    }
+}
+
+fct kbd_getc() -> Int {
+    unsafe {
+        let status = port_in(100);
+        let is_ready = status - ((status / 2) * 2);
+        let is_mouse = (status / 32) - (((status / 32) / 2) * 2);
+
+        if (is_ready == 1) {
+            let scancode = port_in(96);
+            
+            if (is_mouse == 1) {
+                return 0;
+            }
+
+            let last_key_mem = 131200;
+            let shift_state  = 131208;
+            let altgr_state  = 131216;
+            let is_ext_state = 131224;
+
+            if (scancode == 224) {
+                mmio_write(is_ext_state, 1);
+                return 0;
+            }
+
+            let was_ext = mmio_read(is_ext_state);
+            mmio_write(is_ext_state, 0);
+
+            if (was_ext == 1) {
+                if (scancode >= 128) {
+                    mmio_write(last_key_mem, 0);
+                    return 0;
+                }
+                if (scancode == 72) { return 201; } // Up
+                if (scancode == 80) { return 202; } // Down
+                if (scancode == 75) { return 203; } // Left
+                if (scancode == 77) { return 204; } // Right
+                return 0;
+            }
+
+            if (scancode == 42 || scancode == 54) {
+                mmio_write(shift_state, 1);
+                return 0;
+            }
+            if (scancode == 170 || scancode == 182) {
+                mmio_write(shift_state, 0);
+                return 0;
+            }
+            if (scancode == 56) {
+                mmio_write(altgr_state, 1);
+                return 0;
+            }
+            if (scancode == 184) {
+                mmio_write(altgr_state, 0);
+                return 0;
+            }
+
+            if (scancode >= 128) {
+                mmio_write(last_key_mem, 0);
+                return 0;
+            }
+
+            let last_key = mmio_read(last_key_mem);
+            if (scancode != last_key) {
+                mmio_write(last_key_mem, scancode);
+
+                let is_shifted = mmio_read(shift_state);
+                let is_altgr   = mmio_read(altgr_state);
+
+                let target_map = 131072;
+                if (is_altgr == 1) {
+                    target_map = 132096;
+                } else if (is_shifted == 1) {
+                    target_map = 131584;
+                }
+
+                return mmio_read(target_map + scancode);
+            }
+        }
+        return 0;
+    }
+}

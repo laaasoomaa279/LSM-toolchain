@@ -1,0 +1,158 @@
+fulldev
+
+import "kernel/vga.lsm";
+import "kernel/keyboard.lsm";
+
+fct oshi_draw_block(x: Int, y: Int, scale: Int, color: Int) -> void {
+    let py = 0;
+    while (py < scale) {
+        let px = 0;
+        while (px < scale) {
+            draw_pixel(x + px, y + py, color);
+            px = px + 1;
+        }
+        py = py + 1;
+    }
+}
+
+fct oshi_animated_app() -> void {
+    let bg_color = 0; 
+    vga_clear(bg_color);
+
+    let col_gold    = 16776960;
+    let col_emerald = 65280;
+    let col_cyan    = 65535;
+    let col_purple  = 16711935;
+
+    let base_x = 420;
+    let base_y = 360;
+    let scale = 4;
+    let active = 1;
+
+    let progress = 0;
+    while (progress < 240 && active == 1) {
+        if (kbd_getc() != 0) { active = 0; }
+        
+        let oy = 0;
+        while (oy <= progress) {
+            let ox = 0;
+            while (ox < 160) {
+                if (oy < 40 || oy > 200 || ox < 40 || ox > 120) {
+                    oshi_draw_block(base_x + ox, base_y + oy, scale, col_gold);
+                }
+                ox = ox + 8;
+            }
+            oy = oy + 8;
+        }
+        vga_flip();
+        progress = progress + 16;
+    }
+
+    progress = 0;
+    while (progress < 240 && active == 1) {
+        if (kbd_getc() != 0) { active = 0; }
+
+        let sy = 0;
+        while (sy <= progress) {
+            let sx = 0;
+            while (sx < 160) {
+                if (sy < 40 || (sy >= 100 && sy <= 140) || sy > 200 || (sy < 100 && sx < 40) || (sy > 140 && sx > 120)) {
+                    oshi_draw_block(base_x + 220 + sx, base_y + sy, scale, col_emerald);
+                }
+                sx = sx + 8;
+            }
+            sy = sy + 8;
+        }
+        vga_flip();
+        progress = progress + 16;
+    }
+
+    progress = 0;
+    while (progress < 240 && active == 1) {
+        if (kbd_getc() != 0) { active = 0; }
+
+        let hy = 0;
+        while (hy <= progress) {
+            let hx = 0;
+            while (hx < 160) {
+                if (hx < 40 || hx > 120 || (hy >= 100 && hy <= 140)) {
+                    oshi_draw_block(base_x + 440 + hx, base_y + hy, scale, col_cyan);
+                }
+                hx = hx + 8;
+            }
+            hy = hy + 8;
+        }
+        vga_flip();
+        progress = progress + 16;
+    }
+
+    progress = 0;
+    while (progress < 240 && active == 1) {
+        if (kbd_getc() != 0) { active = 0; }
+
+        let iy = 0;
+        while (iy <= progress) {
+            let ix = 0;
+            while (ix < 120) {
+                if (iy < 40 || iy > 200 || (ix >= 40 && ix <= 80)) {
+                    oshi_draw_block(base_x + 660 + ix, base_y + iy, scale, col_purple);
+                }
+                ix = ix + 8;
+            }
+            iy = iy + 8;
+        }
+        vga_flip();
+        progress = progress + 16;
+    }
+
+    if (active == 1) {
+        let os_x = base_x + 840;
+        let os_y = base_y + 60;
+
+        let oy = 0;
+        while (oy < 180) {
+            let ox = 0;
+            while (ox < 120) {
+                if (oy < 30 || oy > 150 || ox < 30 || ox > 90) {
+                    oshi_draw_block(os_x + ox, os_y + oy, scale, col_gold);
+                }
+                ox = ox + 8;
+            }
+            oy = oy + 8;
+        }
+
+        let sy = 0;
+        while (sy < 180) {
+            let sx = 0;
+            while (sx < 120) {
+                if (sy < 30 || (sy >= 70 && sy <= 100) || sy > 150 || (sy < 70 && sx < 30) || (sy > 100 && sx > 90)) {
+                    oshi_draw_block(os_x + 160 + sx, os_y + sy, scale, col_purple);
+                }
+                sx = sx + 8;
+            }
+            sy = sy + 8;
+        }
+        vga_flip();
+    }
+
+    let frame = 0;
+    while (active == 1) {
+        let ch = kbd_getc();
+        if (ch != 0) {
+            active = 0;
+        }
+
+        vga_putc(80, 48, 24, 8);  vga_putc(114, 49, 24, 8); vga_putc(101, 50, 24, 8); vga_putc(115, 51, 24, 8);
+        vga_putc(32, 52, 24, 8);
+        vga_putc(65, 53, 24, 8);  vga_putc(110, 54, 24, 8); vga_putc(121, 55, 24, 8);
+        vga_putc(32, 56, 24, 8);
+        vga_putc(75, 57, 24, 8);  vga_putc(101, 58, 24, 8); vga_putc(121, 59, 24, 8);
+        vga_putc(32, 60, 24, 8);
+        vga_putc(116, 61, 24, 8); vga_putc(111, 62, 24, 8);
+        vga_putc(32, 63, 24, 8);
+        vga_putc(69, 64, 24, 8);  vga_putc(120, 65, 24, 8); vga_putc(105, 66, 24, 8); vga_putc(116, 67, 24, 8);
+
+        vga_flip();
+        frame = frame + 1;
+    }
+}

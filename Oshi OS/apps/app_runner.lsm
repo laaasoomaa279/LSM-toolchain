@@ -1,0 +1,39 @@
+fulldev
+
+import "kernel/vga.lsm";
+import "kernel/fonts.lsm";
+import "kernel/system.lsm";
+import "apps/shell.lsm";
+import "apps/editor.lsm";
+import "apps/snake.lsm";
+import "apps/calc.lsm";
+import "apps/oshi.lsm";
+
+fct run_app(app_id: Int, file_id: Int) -> void {
+    unsafe {
+        let bg_color = 0;
+        
+        // 1. مسح الشاشة وتهيئة المظهر الموحد
+        vga_clear(bg_color);
+        sys_draw_status_bar();
+        vga_flip();
+
+        // 2. توجيه التحكم بالتطبيقات
+        if (app_id == 0) {
+            shell_main();
+        } else if (app_id == 1) {
+            editor_open(file_id);
+        } else if (app_id == 2) {
+            calc_main();
+        } else if (app_id == 3) {
+            snake_main();
+        } else if (app_id == 4) {
+            oshi_animated_app();
+        }
+
+        // 3. إعادة تنظيف الواجهة عند الإنهاء للحفاظ على ثبات النظام
+        vga_clear(bg_color);
+        sys_draw_status_bar();
+        vga_flip();
+    }
+}

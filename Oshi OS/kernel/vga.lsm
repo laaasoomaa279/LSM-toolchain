@@ -1,0 +1,151 @@
+fulldev
+
+import "kernel/fonts.lsm";
+
+fct get_vbe_framebuffer() -> Int {
+    return 4244635648;
+}
+
+fct get_back_buffer() -> Int { 
+    return 16777216;
+}
+
+fct get_screen_width() -> Int { return 1920; }
+fct get_screen_height() -> Int { return 1080; }
+
+fct draw_pixel(x: Int, y: Int, color: Int) -> void {
+    unsafe {
+        if (x >= 0 && x < 1920 && y >= 0 && y < 1080) {
+            let fb = get_back_buffer();
+            let offset = (y * 7680) + (x * 4);
+            
+            let b = color - ((color / 256) * 256);
+            let g = (color / 256) - (((color / 256) / 256) * 256);
+            let r = color / 65536;
+
+            mmio_write(fb + offset + 0, b);
+            mmio_write(fb + offset + 1, g);
+            mmio_write(fb + offset + 2, r);
+            mmio_write(fb + offset + 3, 0);
+        }
+    }
+}
+
+fct vga_flip() -> void {
+    let src = get_back_buffer();
+    let dst = get_vbe_framebuffer();
+    let total_dwords = 2073600; 
+    fast_copy(dst, src, total_dwords);
+}
+
+fct vga_clear(color: Int) -> void {
+    unsafe {
+        let y = 0;
+        while (y < 1080) {
+            let x = 0;
+            while (x < 1920) {
+                draw_pixel(x, y, color);
+                x = x + 1;
+            }
+            y = y + 1;
+        }
+        vga_flip();
+    }
+}
+
+fct vga_putc(ch: Int, col_x: Int, row_y: Int, color_code: Int) -> void {
+    unsafe {
+        if (ch == 10 || ch == 8) { return; }
+
+        let rgb_color = 16777215; 
+        if (color_code == 10) { rgb_color = 65280; }
+        else if (color_code == 11) { rgb_color = 65535; }
+        else if (color_code == 12) { rgb_color = 16711680; }
+        else if (color_code == 13) { rgb_color = 16711935; }
+        else if (color_code == 14) { rgb_color = 16776960; }
+        else if (color_code == 8)  { rgb_color = 8421504; }
+        else if (color_code == 0)  { rgb_color = 0; }
+
+        let font_w = font_get_width();
+        let font_h = font_get_height();
+        let start_x = col_x * font_w;
+        let start_y = row_y * font_h;
+
+        let cy = 0;
+        while (cy < font_h) {
+            let cx = 0;
+            while (cx < font_w) {
+                draw_pixel(start_x + cx, start_y + cy, 0);
+                cx = cx + 1;
+            }
+            cy = cy + 1;
+        }
+
+        if (ch == 32 || color_code == 0) {
+            return;
+        }
+
+        let py = 0;
+        while (py < 16) {
+            let row_data = font_get_glyph_row(ch, py);
+            let mask = 128; 
+            let px = 0;
+
+            while (px < 8) {
+                if (row_data >= mask) {
+                    let dx = start_x + (px * 2);
+                    let dy = start_y + (py * 2);
+                    draw_pixel(dx,     dy,     rgb_color);
+                    draw_pixel(dx + 1, dy,     rgb_color);
+                    draw_pixel(dx,     dy + 1, rgb_color);
+                    draw_pixel(dx + 1, dy + 1, rgb_color);
+                    row_data = row_data - mask;
+                }
+                mask = mask / 2; 
+                px = px + 1;
+            }
+            py = py + 1;
+        }
+    }
+}
+
+fct vga_draw_cursor_color(x: Int, y: Int, color: Int) -> void {
+    unsafe {
+        let cx = x * font_get_width();
+        let cy = y * font_get_height() + 28;
+        let i = 0;
+        while (i < font_get_width()) {
+            draw_pixel(cx + i, cy, color);
+            draw_pixel(cx + i, cy + 1, color);
+            i = i + 1;
+        }
+    }
+}
+
+fct vga_set_cursor(x: Int, y: Int) -> void {
+    vga_draw_cursor_color(x, y, 16777215);
+}
+
+fct vga_clear_cursor(x: Int, y: Int) -> void {
+    vga_draw_cursor_color(x, y, 0);
+}
+
+fct vga_scroll_up(color: Int) -> void {
+    unsafe {
+        let fb = get_back_buffer();
+        let shift_bytes = 245760;
+        let move_dwords = 2012160;
+
+        fast_copy(fb, fb + shift_bytes, move_dwords);
+
+        let y = 1048;
+        while (y < 1080) {
+            let x = 0;
+            while (x < 1920) {
+                draw_pixel(x, y, color);
+                x = x + 1;
+            }
+            y = y + 1;
+        }
+    }
+}

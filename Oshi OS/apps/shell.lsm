@@ -1,0 +1,304 @@
+fulldev
+
+import "kernel/vga.lsm";
+import "kernel/system.lsm";
+import "kernel/keyboard.lsm";
+import "kernel/fs.lsm";
+import "apps/editor.lsm";
+import "apps/snake.lsm";
+import "apps/calc.lsm";
+import "apps/oshi.lsm";
+
+fct is_exact(buf: Int, len: Int, target: Int, target_len: Int) -> Int {
+    unsafe {
+        let clean_len = len;
+        while (clean_len > 0 && mmio_read(buf + clean_len - 1) == 32) {
+            clean_len = clean_len - 1;
+        }
+
+        if (clean_len != target_len) { return 0; }
+        let i = 0;
+        while (i < clean_len) {
+            if (mmio_read(buf + i) != mmio_read(target + i)) { return 0; }
+            i = i + 1;
+        }
+        return 1;
+    }
+}
+
+fct is_prefix(buf: Int, len: Int, target: Int, target_len: Int) -> Int {
+    unsafe {
+        if (len <= target_len) { return 0; }
+        let i = 0;
+        while (i < target_len) {
+            if (mmio_read(buf + i) != mmio_read(target + i)) { return 0; }
+            i = i + 1;
+        }
+        if (mmio_read(buf + target_len) != 32) { return 0; }
+        return 1;
+    }
+}
+
+fct shell_print_num(val: Int, x: Int, y: Int, color: Int) -> Int {
+    let cur_x = x;
+    if (val == 0) {
+        vga_putc(48, cur_x, y, color);
+        return cur_x + 1;
+    }
+    let temp = val;
+    let digits = 0;
+    while (temp > 0) { digits = digits + 1; temp = temp / 10; }
+    let end_x = cur_x + digits;
+    let pos = end_x - 1;
+    temp = val;
+    while (temp > 0) {
+        let d = temp - ((temp / 10) * 10);
+        vga_putc(48 + d, pos, y, color);
+        temp = temp / 10;
+        pos = pos - 1;
+    }
+    return end_x;
+}
+
+fct draw_starship_prompt(y: Int) -> Int {
+    let my = y;
+    if (my >= 30) {
+        vga_scroll_up(0);
+        my = 29;
+    }
+
+    vga_putc(218, 2, my, 14); vga_putc(196, 3, my, 14); 
+    vga_putc(108, 5, my, 10); vga_putc(115, 6, my, 10); vga_putc(109, 7, my, 10);
+    vga_putc(64, 8, my, 8);   
+    vga_putc(111, 9, my, 10); vga_putc(115, 10, my, 10); vga_putc(104, 11, my, 10);
+    vga_putc(105, 12, my, 10); vga_putc(45, 13, my, 10); vga_putc(115, 14, my, 10);
+    vga_putc(121, 15, my, 10); vga_putc(115, 16, my, 10);
+
+    vga_putc(16, 18, my, 14); 
+    vga_putc(126, 20, my, 11); vga_putc(47, 21, my, 11);
+    vga_putc(114, 22, my, 11); vga_putc(111, 23, my, 11); vga_putc(111, 24, my, 11);
+    vga_putc(116, 25, my, 11);
+
+    vga_putc(16, 27, my, 14); 
+    vga_putc(109, 29, my, 13); vga_putc(97, 30, my, 13); vga_putc(101, 31, my, 13); vga_putc(110, 32, my, 13);
+
+    my = my + 1;
+    vga_putc(192, 2, my, 14); vga_putc(196, 3, my, 14); 
+    vga_putc(36, 5, my, 10);  vga_putc(32, 6, my, 15);  
+
+    return my;
+}
+
+fct shell_main() -> void {
+    let bg_color = 0; 
+    vga_clear(bg_color);
+    fs_init();
+
+    sys_draw_status_bar();
+
+    let cur_y = 3;
+    let max_y = 30;
+    let max_x = 110;
+
+    cur_y = draw_starship_prompt(cur_y);
+    let cur_x = 7;
+    vga_set_cursor(cur_x, cur_y);
+    vga_flip();
+
+    let t_help   = 200704;
+    let t_clear  = 200720;
+    let t_list   = 200736;
+    let t_read   = 200752;
+    let t_create = 200768;
+    let t_delete = 200784;
+    let t_edit   = 200800;
+    let t_info   = 200816;
+    let t_calc   = 200832;
+    let t_snake  = 200848;
+    let t_oshi   = 200864;
+
+    unsafe {
+        mmio_write(t_help+0, 104); mmio_write(t_help+1, 101); mmio_write(t_help+2, 108); mmio_write(t_help+3, 112);
+        mmio_write(t_clear+0, 99); mmio_write(t_clear+1, 108); mmio_write(t_clear+2, 101); mmio_write(t_clear+3, 97); mmio_write(t_clear+4, 114);
+        mmio_write(t_list+0, 108); mmio_write(t_list+1, 105); mmio_write(t_list+2, 115); mmio_write(t_list+3, 116);
+        mmio_write(t_read+0, 114); mmio_write(t_read+1, 101); mmio_write(t_read+2, 97); mmio_write(t_read+3, 100);
+        mmio_write(t_create+0, 99); mmio_write(t_create+1, 114); mmio_write(t_create+2, 101); mmio_write(t_create+3, 97); mmio_write(t_create+4, 116); mmio_write(t_create+5, 101);
+        mmio_write(t_delete+0, 100); mmio_write(t_delete+1, 101); mmio_write(t_delete+2, 108); mmio_write(t_delete+3, 101); mmio_write(t_delete+4, 116); mmio_write(t_delete+5, 101);
+        mmio_write(t_edit+0, 101); mmio_write(t_edit+1, 100); mmio_write(t_edit+2, 105); mmio_write(t_edit+3, 116);
+        mmio_write(t_info+0, 105); mmio_write(t_info+1, 110); mmio_write(t_info+2, 102); mmio_write(t_info+3, 111);
+        mmio_write(t_calc+0, 99); mmio_write(t_calc+1, 97); mmio_write(t_calc+2, 108); mmio_write(t_calc+3, 99);
+        mmio_write(t_snake+0, 115); mmio_write(t_snake+1, 110); mmio_write(t_snake+2, 97); mmio_write(t_snake+3, 107); mmio_write(t_snake+4, 101);
+        mmio_write(t_oshi+0, 111); mmio_write(t_oshi+1, 115); mmio_write(t_oshi+2, 104); mmio_write(t_oshi+3, 105);
+        
+        let cmd_buf = 196608;
+        let cmd_len = 0;
+
+        while (1 == 1) {
+            let ch = kbd_getc();
+
+            if (ch != 0) {
+                if (ch == 10) {
+                    vga_clear_cursor(cur_x, cur_y);
+                    cur_y = cur_y + 1;
+                    if (cur_y >= max_y) { vga_scroll_up(bg_color); cur_y = max_y - 1; }
+
+                    if (cmd_len > 0) {
+                        if (is_exact(cmd_buf, cmd_len, t_clear, 5) == 1) {
+                            vga_clear(bg_color);
+                            cur_y = 2;
+                        }
+                        else if (is_exact(cmd_buf, cmd_len, t_help, 4) == 1) {
+                            // list create edit info calc snake oshi
+                            vga_putc(108, 4, cur_y, 10); vga_putc(105, 5, cur_y, 10); vga_putc(115, 6, cur_y, 10); vga_putc(116, 7, cur_y, 10);
+                            vga_putc(32, 8, cur_y, 15);
+                            vga_putc(99, 9, cur_y, 10); vga_putc(114, 10, cur_y, 10); vga_putc(101, 11, cur_y, 10); vga_putc(97, 12, cur_y, 10); vga_putc(116, 13, cur_y, 10); vga_putc(101, 14, cur_y, 10);
+                            vga_putc(32, 15, cur_y, 15);
+                            vga_putc(101, 16, cur_y, 10); vga_putc(100, 17, cur_y, 10); vga_putc(105, 18, cur_y, 10); vga_putc(116, 19, cur_y, 10);
+                            vga_putc(32, 20, cur_y, 15);
+                            vga_putc(105, 21, cur_y, 10); vga_putc(110, 22, cur_y, 10); vga_putc(102, 23, cur_y, 10); vga_putc(111, 24, cur_y, 10);
+                            vga_putc(32, 25, cur_y, 15);
+                            vga_putc(99, 26, cur_y, 10); vga_putc(97, 27, cur_y, 10); vga_putc(108, 28, cur_y, 10); vga_putc(99, 29, cur_y, 10);
+                            vga_putc(32, 30, cur_y, 15);
+                            vga_putc(115, 31, cur_y, 10); vga_putc(110, 32, cur_y, 10); vga_putc(97, 33, cur_y, 10); vga_putc(107, 34, cur_y, 10); vga_putc(101, 35, cur_y, 10);
+                            vga_putc(32, 36, cur_y, 15);
+                            vga_putc(111, 37, cur_y, 10); vga_putc(115, 38, cur_y, 10); vga_putc(104, 39, cur_y, 10); vga_putc(105, 40, cur_y, 10);
+                            cur_y = cur_y + 1;
+                        }
+                        else if (is_exact(cmd_buf, cmd_len, t_list, 4) == 1) {
+                            let root = get_fs_root();
+                            let count = mmio_read(root + 2);
+                            let fi = 0;
+                            while (fi < count) {
+                                let meta = root + 16 + (fi * 32);
+                                let fx = 4;
+                                let fch_i = 0;
+                                while (mmio_read(meta + fch_i) != 0) {
+                                    vga_putc(mmio_read(meta + fch_i), fx, cur_y, 11);
+                                    fx = fx + 1;
+                                    fch_i = fch_i + 1;
+                                }
+                                vga_putc(32, fx, cur_y, 8);
+                                vga_putc(40, fx+1, cur_y, 8);
+                                fx = shell_print_num(mmio_read(meta + 16), fx+2, cur_y, 8);
+                                vga_putc(66, fx, cur_y, 8);
+                                vga_putc(41, fx+1, cur_y, 8);
+                                cur_y = cur_y + 1;
+                                if (cur_y >= max_y) { vga_scroll_up(bg_color); cur_y = max_y - 1; }
+                                fi = fi + 1;
+                            }
+                        }
+                        else if (is_exact(cmd_buf, cmd_len, t_info, 4) == 1) {
+                            cur_y = sys_print_info(cur_y);
+                        }
+                        else if (is_prefix(cmd_buf, cmd_len, t_create, 6) == 1) {
+                            let fname_buf = cmd_buf + 7;
+                            let fname_len = cmd_len - 7;
+                            while (fname_len > 0 && mmio_read(fname_buf + fname_len - 1) == 32) {
+                                fname_len = fname_len - 1;
+                            }
+                            fs_touch(fname_buf, fname_len);
+                        }
+                        else if (is_prefix(cmd_buf, cmd_len, t_delete, 6) == 1) {
+                            let fname_buf = cmd_buf + 7;
+                            let fname_len = cmd_len - 7;
+                            while (fname_len > 0 && mmio_read(fname_buf + fname_len - 1) == 32) {
+                                fname_len = fname_len - 1;
+                            }
+                            let fid = fs_find(fname_buf, fname_len);
+                            if (fid != 0 - 1) {
+                                fs_delete(fid);
+                            }
+                        }
+                        else if (is_prefix(cmd_buf, cmd_len, t_read, 4) == 1) {
+                            let fname_buf = cmd_buf + 5;
+                            let fname_len = cmd_len - 5;
+                            while (fname_len > 0 && mmio_read(fname_buf + fname_len - 1) == 32) {
+                                fname_len = fname_len - 1;
+                            }
+                            let fid = fs_find(fname_buf, fname_len);
+                            if (fid != 0 - 1) {
+                                let dptr = fs_get_data_ptr(fid);
+                                let dsz = fs_get_size(fid);
+                                let cx = 4;
+                                let di = 0;
+                                while (di < dsz) {
+                                    let dc = mmio_read(dptr + di);
+                                    if (dc == 10) {
+                                        cur_y = cur_y + 1;
+                                        cx = 4;
+                                        if (cur_y >= max_y) { vga_scroll_up(bg_color); cur_y = max_y - 1; }
+                                    } else {
+                                        vga_putc(dc, cx, cur_y, 15);
+                                        cx = cx + 1;
+                                    }
+                                    di = di + 1;
+                                }
+                                cur_y = cur_y + 1;
+                            }
+                        }
+                        else if (is_prefix(cmd_buf, cmd_len, t_edit, 4) == 1) {
+                            let fname_buf = cmd_buf + 5;
+                            let fname_len = cmd_len - 5;
+                            while (fname_len > 0 && mmio_read(fname_buf + fname_len - 1) == 32) {
+                                fname_len = fname_len - 1;
+                            }
+                            fs_touch(fname_buf, fname_len);
+                            let fid = fs_find(fname_buf, fname_len);
+                            editor_open(fid);
+                            vga_clear(bg_color);
+                            cur_y = 2;
+                        }
+                        else if (is_exact(cmd_buf, cmd_len, t_oshi, 4) == 1) {
+                            oshi_animated_app();
+                            vga_clear(bg_color);
+                            cur_y = 2;
+                        }
+                        else if (is_exact(cmd_buf, cmd_len, t_calc, 4) == 1) {
+                            calc_main();
+                            vga_clear(bg_color);
+                            cur_y = 2;
+                        }
+                        else if (is_exact(cmd_buf, cmd_len, t_snake, 5) == 1) {
+                            snake_main();
+                            vga_clear(bg_color);
+                            cur_y = 2;
+                        }
+                        else {
+                            vga_putc(63, 4, cur_y, 12);
+                            cur_y = cur_y + 1;
+                        }
+                    }
+
+                    cmd_len = 0;
+                    cur_y = draw_starship_prompt(cur_y);
+                    cur_x = 7;
+                    
+                    sys_draw_status_bar();
+                    vga_set_cursor(cur_x, cur_y);
+                    vga_flip();
+                }
+                else if (ch == 8) {
+                    if (cmd_len > 0 && cur_x > 7) {
+                        vga_clear_cursor(cur_x, cur_y);
+                        cmd_len = cmd_len - 1;
+                        cur_x = cur_x - 1;
+                        vga_putc(32, cur_x, cur_y, bg_color);
+                        vga_set_cursor(cur_x, cur_y);
+                        vga_flip();
+                    }
+                }
+                else if (ch >= 32 && ch <= 126) {
+                    if (cur_x < max_x && cmd_len < 64) {
+                        vga_clear_cursor(cur_x, cur_y);
+                        mmio_write(cmd_buf + cmd_len, ch);
+                        cmd_len = cmd_len + 1;
+                        vga_putc(ch, cur_x, cur_y, 15);
+                        cur_x = cur_x + 1;
+                        vga_set_cursor(cur_x, cur_y);
+                        vga_flip();
+                    }
+                }
+            }
+        }
+    }
+}

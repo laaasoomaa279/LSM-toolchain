@@ -1,0 +1,12 @@
+fulldev
+
+import "kernel/keyboard.lsm";
+import "apps/shell.lsm";
+
+fct _start() -> void {
+    unsafe {
+        cpu_cli();
+        kbd_init();
+    }
+    shell_main();
+}

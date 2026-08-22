@@ -1,0 +1,253 @@
+fulldev
+
+import "kernel/vga.lsm";
+import "kernel/keyboard.lsm";
+
+fct calc_wipe(win_x: Int, win_y: Int) -> void {
+    let sx = win_x + 2;
+    while (sx <= win_x + 30) {
+        vga_putc(32, sx, win_y + 3, 0);
+        sx = sx + 1;
+    }
+}
+
+fct calc_print_num(val: Int, x: Int, y: Int, color: Int) -> Int {
+    let cur_x = x;
+    if (val < 0) {
+        vga_putc(45, cur_x, y, color);
+        cur_x = cur_x + 1;
+        val = 0 - val;
+    }
+    if (val == 0) {
+        vga_putc(48, cur_x, y, color);
+        return cur_x + 1;
+    }
+
+    let temp = val;
+    let digits = 0;
+    while (temp > 0) { digits = digits + 1; temp = temp / 10; }
+
+    let end_x = cur_x + digits;
+    let pos = end_x - 1;
+    temp = val;
+    while (temp > 0) {
+        let d = temp - ((temp / 10) * 10);
+        vga_putc(48 + d, pos, y, color);
+        temp = temp / 10;
+        pos = pos - 1;
+    }
+    return end_x;
+}
+
+fct calc_print_fixed(val: Int, x: Int, y: Int, color: Int) -> void {
+    let cur_x = x;
+    if (val < 0) {
+        vga_putc(45, cur_x, y, color);
+        cur_x = cur_x + 1;
+        val = 0 - val;
+    }
+
+    let whole = val / 1000;
+    let frac = val - (whole * 1000);
+
+    cur_x = calc_print_num(whole, cur_x, y, color);
+
+    if (frac > 0) {
+        vga_putc(46, cur_x, y, color);
+        cur_x = cur_x + 1;
+
+        let d1 = frac / 100;
+        let d2 = (frac - (d1 * 100)) / 10;
+        let d3 = frac - (d1 * 100) - (d2 * 10);
+
+        vga_putc(48 + d1, cur_x, y, color);
+        cur_x = cur_x + 1;
+
+        if (d2 > 0 || d3 > 0) {
+            vga_putc(48 + d2, cur_x, y, color);
+            cur_x = cur_x + 1;
+        }
+        if (d3 > 0) {
+            vga_putc(48 + d3, cur_x, y, color);
+            cur_x = cur_x + 1;
+        }
+    }
+}
+
+fct eval_clean_expr(buf: Int, len: Int) -> Int {
+    unsafe {
+        let total = 0;
+        let current_val = 0;
+        let current_op = 43;
+        let has_val = 0;
+        let is_frac = 0;
+        let frac_mult = 100;
+
+        let i = 0;
+        while (i < len) {
+            let ch = mmio_read(buf + i);
+
+            if (ch >= 48 && ch <= 57) {
+                let d = ch - 48;
+                if (is_frac == 0) {
+                    current_val = (current_val * 10) + (d * 1000);
+                } else {
+                    if (frac_mult >= 1) {
+                        current_val = current_val + (d * frac_mult);
+                        frac_mult = frac_mult / 10;
+                    }
+                }
+                has_val = 1;
+            }
+            else if (ch == 46) {
+                is_frac = 1;
+                frac_mult = 100;
+            }
+            else if (ch == 43 || ch == 45 || ch == 42 || ch == 47) {
+                if (has_val == 1) {
+                    if (current_op == 43) { total = total + current_val; }
+                    else if (current_op == 45) { total = total - current_val; }
+                    else if (current_op == 42) { total = (total * current_val) / 1000; }
+                    else if (current_op == 47) {
+                        if (current_val != 0) { total = (total * 1000) / current_val; }
+                    }
+                }
+                current_op = ch;
+                current_val = 0;
+                has_val = 0;
+                is_frac = 0;
+                frac_mult = 100;
+            }
+            i = i + 1;
+        }
+
+        if (has_val == 1) {
+            if (current_op == 43) { total = total + current_val; }
+            else if (current_op == 45) { total = total - current_val; }
+            else if (current_op == 42) { total = (total * current_val) / 1000; }
+            else if (current_op == 47) {
+                if (current_val != 0) { total = (total * 1000) / current_val; }
+            }
+        }
+
+        return total;
+    }
+}
+
+fct calc_main() -> void {
+    let bg = 0;
+    vga_clear(bg);
+
+    let win_x = 34;
+    let win_y = 8;
+
+    let wy = win_y;
+    while (wy <= win_y + 16) {
+        let wx = win_x;
+        while (wx <= win_x + 32) {
+            vga_putc(32, wx, wy, 8);
+            wx = wx + 1;
+        }
+        wy = wy + 1;
+    }
+
+    vga_putc(79, win_x + 12, win_y + 1, 14); vga_putc(83, win_x + 13, win_y + 1, 14);
+    vga_putc(72, win_x + 14, win_y + 1, 14); vga_putc(73, win_x + 15, win_y + 1, 14);
+    vga_putc(67, win_x + 17, win_y + 1, 11); vga_putc(65, win_x + 18, win_y + 1, 11);
+    vga_putc(76, win_x + 19, win_y + 1, 11); vga_putc(67, win_x + 20, win_y + 1, 11);
+
+    calc_wipe(win_x, win_y);
+
+    let row1_y = win_y + 6;
+    let row2_y = win_y + 8;
+    let row3_y = win_y + 10;
+    let row4_y = win_y + 12;
+
+    vga_putc(55, win_x + 4, row1_y, 15);  vga_putc(56, win_x + 11, row1_y, 15);
+    vga_putc(57, win_x + 18, row1_y, 15); vga_putc(47, win_x + 25, row1_y, 10);
+
+    vga_putc(52, win_x + 4, row2_y, 15);  vga_putc(53, win_x + 11, row2_y, 15);
+    vga_putc(54, win_x + 18, row2_y, 15); vga_putc(42, win_x + 25, row2_y, 10);
+
+    vga_putc(49, win_x + 4, row3_y, 15);  vga_putc(50, win_x + 11, row3_y, 15);
+    vga_putc(51, win_x + 18, row3_y, 15); vga_putc(45, win_x + 25, row3_y, 10);
+
+    vga_putc(67, win_x + 4, row4_y, 12);  vga_putc(48, win_x + 11, row4_y, 15);
+    vga_putc(46, win_x + 18, row4_y, 15); vga_putc(43, win_x + 25, row4_y, 10);
+
+    vga_flip();
+
+    let expr_mem = 262144;
+    let expr_len = 0;
+
+    unsafe {
+        let mi = 0;
+        while (mi < 64) { mmio_write(expr_mem + mi, 0); mi = mi + 1; }
+    }
+
+    let running = 1;
+    while (running == 1) {
+        let ch = kbd_getc();
+
+        if (ch != 0) {
+            if (ch == 27) { running = 0; }
+            else if (ch == 67 || ch == 99) {
+                expr_len = 0;
+                unsafe {
+                    let mi = 0;
+                    while (mi < 32) { mmio_write(expr_mem + mi, 0); mi = mi + 1; }
+                }
+                calc_wipe(win_x, win_y);
+            }
+            else if (ch == 8) {
+                if (expr_len > 0) {
+                    expr_len = expr_len - 1;
+                    unsafe { mmio_write(expr_mem + expr_len, 0); }
+                    calc_wipe(win_x, win_y);
+                    let ri = 0;
+                    while (ri < expr_len) {
+                        unsafe { vga_putc(mmio_read(expr_mem + ri), win_x + 4 + ri, win_y + 3, 10); }
+                        ri = ri + 1;
+                    }
+                }
+            }
+            else if (ch == 10 || ch == 61) {
+                if (expr_len > 0) {
+                    let res = eval_clean_expr(expr_mem, expr_len);
+                    calc_wipe(win_x, win_y);
+                    vga_putc(61, win_x + 4, win_y + 3, 14);
+                    vga_putc(32, win_x + 5, win_y + 3, 0);
+                    calc_print_fixed(res, win_x + 6, win_y + 3, 14);
+
+                    expr_len = 0;
+                    unsafe {
+                        let mi = 0;
+                        while (mi < 32) { mmio_write(expr_mem + mi, 0); mi = mi + 1; }
+                    }
+                }
+            }
+            else {
+                let actual = 0;
+                if (ch >= 48 && ch <= 57) { actual = ch; }
+                else if (ch == 43) { actual = 43; }
+                else if (ch == 45) { actual = 45; }
+                else if (ch == 42) { actual = 42; }
+                else if (ch == 47 || ch == 58) { actual = 47; }
+                else if (ch == 46 || ch == 44) { actual = 46; }
+
+                if (actual != 0 && expr_len < 24) {
+                    unsafe { mmio_write(expr_mem + expr_len, actual); }
+                    expr_len = expr_len + 1;
+
+                    calc_wipe(win_x, win_y);
+                    let ri = 0;
+                    while (ri < expr_len) {
+                        unsafe { vga_putc(mmio_read(expr_mem + ri), win_x + 4 + ri, win_y + 3, 10); }
+                        ri = ri + 1;
+                    }
+                }
+            }
+            vga_flip();
+        }
+    }
+}

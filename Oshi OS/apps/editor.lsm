@@ -1,0 +1,90 @@
+fulldev
+
+import "kernel/vga.lsm";
+import "kernel/keyboard.lsm";
+import "kernel/fs.lsm";
+
+fct editor_open(file_id: Int) -> void {
+    let ed_bg = 0;
+    vga_clear(ed_bg);
+
+    let x = 0;
+    while (x < 100) {
+        vga_putc(32, x, 0, 8);
+        x = x + 1;
+    }
+
+    vga_putc(79, 2, 0, 14); vga_putc(115, 3, 0, 14); vga_putc(104, 4, 0, 14); vga_putc(105, 5, 0, 14);
+    vga_putc(32, 6, 0, 14); vga_putc(69, 7, 0, 11); vga_putc(100, 8, 0, 11); vga_putc(105, 9, 0, 11);
+    vga_putc(116, 10, 0, 11); vga_putc(111, 11, 0, 11); vga_putc(114, 12, 0, 11);
+    vga_putc(32, 13, 0, 14); vga_putc(124, 14, 0, 14); vga_putc(32, 15, 0, 14);
+    vga_putc(69, 16, 0, 10); vga_putc(83, 17, 0, 10); vga_putc(67, 18, 0, 10);
+    vga_putc(58, 19, 0, 10); vga_putc(32, 20, 0, 10); vga_putc(83, 21, 0, 10);
+    vga_putc(97, 22, 0, 10); vga_putc(118, 23, 0, 10); vga_putc(101, 24, 0, 10);
+
+    let data_ptr = fs_get_data_ptr(file_id);
+    let size = fs_get_size(file_id);
+
+    let cur_x = 2;
+    let cur_y = 2;
+    unsafe {
+        let ri = 0;
+        while (ri < size) {
+            let c = mmio_read(data_ptr + ri);
+            if (c == 10) {
+                cur_y = cur_y + 1;
+                cur_x = 2;
+            } else {
+                vga_putc(c, cur_x, cur_y, 15);
+                cur_x = cur_x + 1;
+                if (cur_x >= 95) {
+                    cur_x = 2;
+                    cur_y = cur_y + 1;
+                }
+            }
+            ri = ri + 1;
+        }
+    }
+
+    vga_set_cursor(cur_x, cur_y);
+    vga_flip();
+
+    let running = 1;
+    while (running == 1) {
+        let ch = kbd_getc();
+
+        if (ch != 0) {
+            if (ch == 27) {
+                fs_save_file(file_id, size);
+                running = 0;
+            }
+            else if (ch == 10) {
+                if (size < 500) {
+                    unsafe { mmio_write(data_ptr + size, 10); }
+                    size = size + 1;
+                    cur_y = cur_y + 1;
+                    cur_x = 2;
+                    vga_set_cursor(cur_x, cur_y);
+                }
+            }
+            else if (ch == 8) { 
+                if (size > 0 && cur_x > 2) {
+                    size = size - 1;
+                    cur_x = cur_x - 1;
+                    vga_putc(32, cur_x, cur_y, ed_bg);
+                    vga_set_cursor(cur_x, cur_y);
+                }
+            }
+            else if (ch >= 32 && ch <= 126) {
+                if (size < 500 && cur_x < 95) {
+                    unsafe { mmio_write(data_ptr + size, ch); }
+                    size = size + 1;
+                    vga_putc(ch, cur_x, cur_y, 15);
+                    cur_x = cur_x + 1;
+                    vga_set_cursor(cur_x, cur_y);
+                }
+            }
+            vga_flip();
+        }
+    }
+}

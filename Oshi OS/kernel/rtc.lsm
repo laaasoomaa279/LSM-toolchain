@@ -1,0 +1,23 @@
+fulldev
+
+import "kernel/io.lsm";
+
+fct rtc_read_register(reg: Int) -> Int {
+    port_outb(112, reg); // Port 0x70
+    return port_inb(113); // Port 0x71
+}
+
+// تحويل BCD Byte إلى رقم عشري عادي
+fct bcd_to_bin(val: Int) -> Int {
+    return (val - ((val / 16) * 16)) + ((val / 16) * 10);
+}
+
+fct rtc_get_hours() -> Int {
+    let raw = rtc_read_register(4); // Register 0x04 = Hours
+    return bcd_to_bin(raw);
+}
+
+fct rtc_get_minutes() -> Int {
+    let raw = rtc_read_register(2); // Register 0x02 = Minutes
+    return bcd_to_bin(raw);
+}

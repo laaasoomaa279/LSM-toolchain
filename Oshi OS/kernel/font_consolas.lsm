@@ -1,0 +1,33 @@
+fulldev
+
+// دالة جلب بيانات الحرف من الجدول المتجه (consolas_italic_30_font_lookup)
+fct get_font_char_offset(ch: Int) -> Int {
+    // كل عنصر في Struct يشغل 6 متغيرات (offset, w, h, left, top, advance)
+    let base = 5242880 + (ch * 24); // 0x500000
+    return mmio_read32(base + 0);   // offset
+}
+
+fct get_font_char_width(ch: Int) -> Int {
+    let base = 5242880 + (ch * 24);
+    return mmio_read32(base + 4);   // w
+}
+
+fct get_font_char_height(ch: Int) -> Int {
+    let base = 5242880 + (ch * 24);
+    return mmio_read32(base + 8);   // h
+}
+
+fct get_font_char_left(ch: Int) -> Int {
+    let base = 5242880 + (ch * 24);
+    return mmio_read32(base + 12);  // left
+}
+
+fct get_font_char_top(ch: Int) -> Int {
+    let base = 5242880 + (ch * 24);
+    return mmio_read32(base + 16);  // top
+}
+
+fct get_font_char_advance(ch: Int) -> Int {
+    let base = 5242880 + (ch * 24);
+    return mmio_read32(base + 20);  // advance
+}

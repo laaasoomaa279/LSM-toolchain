@@ -1,0 +1,86 @@
+fulldev
+
+import "kernel/vga.lsm";
+import "kernel/rtc.lsm";
+import "kernel/memory.lsm";
+
+fct sys_get_morocco_hours() -> Int {
+    let utc_h = rtc_get_hours();
+    let local_h = utc_h + 1;
+    if (local_h >= 24) { local_h = local_h - 24; }
+    return local_h;
+}
+
+fct sys_get_cpu_usage() -> Int { return 1; }
+
+fct sys_draw_status_bar() -> void {
+    unsafe {
+        let x = 0;
+        while (x < 100) {
+            vga_putc(32, x, 0, 8);
+            x = x + 1;
+        }
+
+        vga_putc(79, 1, 0, 14); vga_putc(115, 2, 0, 14); vga_putc(104, 3, 0, 14); vga_putc(105, 4, 0, 14); // Oshi
+        vga_putc(79, 5, 0, 13); vga_putc(83, 6, 0, 13);                                                 // OS
+
+        let cpu = sys_get_cpu_usage();
+        vga_putc(67, 28, 0, 10); vga_putc(80, 29, 0, 10); vga_putc(85, 30, 0, 10);
+        vga_putc(58, 31, 0, 8);  vga_putc(32, 32, 0, 8);
+        vga_putc(cpu + 48, 33, 0, 15); vga_putc(37, 34, 0, 15); 
+
+        vga_putc(124, 38, 0, 8); 
+
+        let ram_kb = sys_get_ram_used_kb();
+        vga_putc(82, 42, 0, 12); vga_putc(65, 43, 0, 12); vga_putc(77, 44, 0, 12); 
+        vga_putc(58, 45, 0, 8);  vga_putc(32, 46, 0, 8);
+
+        let temp = ram_kb;
+        let pos = 52;
+        if (temp == 0) {
+            vga_putc(48, 47, 0, 15);
+        } else {
+            while (temp > 0) {
+                let d = temp - ((temp / 10) * 10);
+                vga_putc(d + 48, pos, 0, 15);
+                temp = temp / 10;
+                pos = pos - 1;
+            }
+        }
+        vga_putc(75, 54, 0, 15); vga_putc(66, 55, 0, 15);
+
+        vga_putc(124, 80, 0, 8); 
+
+        let hh = sys_get_morocco_hours();
+        let mm = rtc_get_minutes();
+
+        vga_putc((hh / 10) + 48, 83, 0, 11);
+        vga_putc((hh - ((hh / 10) * 10)) + 48, 84, 0, 11);
+        vga_putc(58, 85, 0, 11); 
+        vga_putc((mm / 10) + 48, 86, 0, 11);
+        vga_putc((mm - ((mm / 10) * 10)) + 48, 87, 0, 11);
+    }
+}
+
+// شاشة Neofetch / info لعرض تفاصيل العتاد
+fct sys_print_info(cur_y: Int) -> Int {
+    let y = cur_y;
+    
+    // OshiOS System Details
+    vga_putc(79, 4, y, 14); vga_putc(115, 5, y, 14); vga_putc(104, 6, y, 14); vga_putc(105, 7, y, 14);
+    vga_putc(79, 8, y, 13); vga_putc(83, 9, y, 13);
+    vga_putc(58, 10, y, 8); vga_putc(32, 11, y, 15);
+    vga_putc(118, 12, y, 11); vga_putc(49, 13, y, 11); vga_putc(46, 14, y, 11); vga_putc(48, 15, y, 11); // v1.0
+    
+    y = y + 1;
+    vga_putc(65, 4, y, 10); vga_putc(114, 5, y, 10); vga_putc(99, 6, y, 10); vga_putc(104, 7, y, 10); // Arch
+    vga_putc(58, 8, y, 8);  vga_putc(32, 9, y, 15);
+    vga_putc(120, 10, y, 15); vga_putc(56, 11, y, 15); vga_putc(54, 12, y, 15); // x86
+
+    y = y + 1;
+    vga_putc(68, 4, y, 12); vga_putc(105, 5, y, 12); vga_putc(115, 6, y, 12); vga_putc(107, 7, y, 12); // Disk
+    vga_putc(58, 8, y, 8);  vga_putc(32, 9, y, 15);
+    vga_putc(65, 10, y, 15); vga_putc(84, 11, y, 15); vga_putc(65, 12, y, 15); // ATA Disk
+
+    return y + 1;
+}

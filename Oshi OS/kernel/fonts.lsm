@@ -1,0 +1,13 @@
+fulldev
+
+// جلب بيانات السطر الخاص بالحرف من الذاكرة أو مصفوفة الخطوط
+fct font_get_glyph_row(ch: Int, py: Int) -> Int {
+    unsafe {
+        // قراءة بايت السطر للحرف المحدد
+        return mmio_read(32768 + (ch * 16) + py);
+    }
+}
+
+// أبعاد الخط الافتراضي لاستخدامها ديناميكياً في باقي الأجزاء
+fct font_get_width() -> Int { return 16; }
+fct font_get_height() -> Int { return 32; }

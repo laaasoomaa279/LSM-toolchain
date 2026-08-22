@@ -1,0 +1,241 @@
+fulldev
+
+import "kernel/vga.lsm";
+import "kernel/keyboard.lsm";
+
+fct pacman_main() -> void {
+    let bg = 0;
+    let app_running = 1;
+
+    let eaten_map = 393216;
+
+    while (app_running == 1) {
+        vga_clear(bg);
+
+        unsafe {
+            let cl = 0;
+            while (cl < 2000) {
+                mmio_write(eaten_map + cl, 0);
+                cl = cl + 1;
+            }
+        }
+
+        let x = 0;
+        while (x < 80) {
+            vga_putc(35, x, 0, 9);
+            vga_putc(35, x, 24, 9);
+            x = x + 1;
+        }
+        let y = 0;
+        while (y < 25) {
+            vga_putc(35, 0, y, 9);
+            vga_putc(35, 79, y, 9);
+            y = y + 1;
+        }
+
+        let wx = 10;
+        while (wx < 30) { vga_putc(35, wx, 6, 9); vga_putc(35, wx + 40, 6, 9); wx = wx + 1; }
+        wx = 10;
+        while (wx < 30) { vga_putc(35, wx, 18, 9); vga_putc(35, wx + 40, 18, 9); wx = wx + 1; }
+        wx = 25;
+        while (wx < 55) { vga_putc(35, wx, 12, 9); wx = wx + 1; }
+
+        let wy = 8;
+        while (wy < 16) { vga_putc(35, 20, wy, 9); vga_putc(35, 60, wy, 9); wy = wy + 1; }
+
+        let my = 2;
+        while (my < 23) {
+            let mx = 4;
+            while (mx < 76) {
+                let is_wall = 0;
+                if ((my == 6 && ((mx >= 10 && mx < 30) || (mx >= 50 && mx < 70))) ||
+                    (my == 18 && ((mx >= 10 && mx < 30) || (mx >= 50 && mx < 70))) ||
+                    (my == 12 && (mx >= 25 && mx < 55)) ||
+                    (mx == 20 && (my >= 8 && my < 16)) ||
+                    (mx == 60 && (my >= 8 && my < 16))) {
+                    is_wall = 1;
+                }
+
+                if (is_wall == 0) {
+                    vga_putc(46, mx, my, 7);
+                }
+                mx = mx + 4;
+            }
+            my = my + 2;
+        }
+
+        vga_putc(80, 2, 0, 14); vga_putc(65, 3, 0, 14); vga_putc(67, 4, 0, 14);
+        vga_putc(45, 5, 0, 14); vga_putc(77, 6, 0, 14); vga_putc(65, 7, 0, 14); vga_putc(78, 8, 0, 14);
+        vga_putc(124, 10, 0, 14);
+
+        vga_putc(83, 12, 0, 15); vga_putc(67, 13, 0, 15); vga_putc(79, 14, 0, 15);
+        vga_putc(82, 15, 0, 15); vga_putc(69, 16, 0, 15); vga_putc(58, 17, 0, 15);
+
+        let score = 0;
+        vga_putc(48, 19, 0, 15); vga_putc(48, 20, 0, 15); vga_putc(48, 21, 0, 15);
+
+        let px = 40;
+        let py = 20;
+        let p_dir = 0;
+
+        let gx = 40;
+        let gy = 3;
+
+        vga_putc(67, px, py, 14);
+        vga_putc(77, gx, gy, 12);
+
+        let flush = 0;
+        while (flush < 5000) {
+            let d = kbd_getc();
+            flush = flush + 1;
+        }
+
+        let is_alive = 1;
+        let ghost_step = 0;
+
+        while (is_alive == 1) {
+            let tick = 0;
+            let speed = 400000;
+            if (p_dir == 1 || p_dir == 2) { speed = 600000; }
+
+            while (tick < speed) {
+                let ch = kbd_getc();
+
+                if (ch == 27) {
+                    is_alive = 0;
+                    app_running = 0;
+                    tick = speed;
+                }
+                else if (ch == 201 || ch == 122 || ch == 90) { p_dir = 1; }
+                else if (ch == 202 || ch == 115 || ch == 83) { p_dir = 2; }
+                else if (ch == 203 || ch == 113 || ch == 81) { p_dir = 3; }
+                else if (ch == 204 || ch == 100 || ch == 68) { p_dir = 4; }
+
+                tick = tick + 1;
+            }
+
+            if (is_alive == 1 && p_dir != 0) {
+                let next_px = px;
+                let next_py = py;
+
+                if (p_dir == 1) { next_py = py - 1; }
+                else if (p_dir == 2) { next_py = py + 1; }
+                else if (p_dir == 3) { next_px = px - 1; }
+                else if (p_dir == 4) { next_px = px + 1; }
+
+                let hit_wall = 0;
+                if (next_px <= 0 || next_px >= 79 || next_py <= 0 || next_py >= 24) { hit_wall = 1; }
+
+                if ((next_py == 6 && ((next_px >= 10 && next_px < 30) || (next_px >= 50 && next_px < 70))) ||
+                    (next_py == 18 && ((next_px >= 10 && next_px < 30) || (next_px >= 50 && next_px < 70))) ||
+                    (next_py == 12 && (next_px >= 25 && next_px < 55)) ||
+                    (next_px == 20 && (next_py >= 8 && next_py < 16)) ||
+                    (next_px == 60 && (next_py >= 8 && next_py < 16))) {
+                    hit_wall = 1;
+                }
+
+                if (hit_wall == 0) {
+                    vga_putc(32, px, py, bg);
+                    px = next_px;
+                    py = next_py;
+
+                    unsafe {
+                        let offset = py * 80 + px;
+                        if (mmio_read(eaten_map + offset) == 0) {
+                            if (py - ((py / 2) * 2) == 0 && px - ((px / 4) * 4) == 0) {
+                                mmio_write(eaten_map + offset, 1);
+                                score = score + 10;
+
+                                let s_h = score / 100;
+                                let s_t = (score - (s_h * 100)) / 10;
+                                let s_o = score - (s_h * 100) - (s_t * 10);
+                                vga_putc(48 + s_h, 19, 0, 15);
+                                vga_putc(48 + s_t, 20, 0, 15);
+                                vga_putc(48 + s_o, 21, 0, 15);
+                            }
+                        }
+                    }
+                    vga_putc(67, px, py, 14);
+                }
+
+                ghost_step = ghost_step + 1;
+                if (ghost_step >= 3) {
+                    ghost_step = 0;
+                    vga_putc(32, gx, gy, bg);
+
+                    let next_gx = gx;
+                    let next_gy = gy;
+
+                    if (px > gx) { next_gx = gx + 1; }
+                    else if (px < gx) { next_gx = gx - 1; }
+                    
+                    if (py > gy) { next_gy = gy + 1; }
+                    else if (py < gy) { next_gy = gy - 1; }
+
+                    let g_wall = 0;
+                    if (next_gx <= 0 || next_gx >= 79 || next_gy <= 0 || next_gy >= 24) { g_wall = 1; }
+                    if ((next_gy == 6 && ((next_gx >= 10 && next_gx < 30) || (next_gx >= 50 && next_gx < 70))) ||
+                        (next_gy == 18 && ((next_gx >= 10 && next_gx < 30) || (next_gx >= 50 && next_gx < 70))) ||
+                        (next_gy == 12 && (next_gx >= 25 && next_gx < 55)) ||
+                        (next_gx == 20 && (next_gy >= 8 && next_gy < 16)) ||
+                        (next_gx == 60 && (next_gy >= 8 && next_gy < 16))) {
+                        g_wall = 1;
+                    }
+
+                    if (g_wall == 0) {
+                        gx = next_gx;
+                        gy = next_gy;
+                    }
+
+                    vga_putc(77, gx, gy, 12);
+                }
+
+                if (px == gx && py == gy) {
+                    is_alive = 0;
+                }
+            }
+        }
+
+        if (app_running == 1) {
+            let gx_ui = 24;
+            let gy_ui = 9;
+
+            vga_putc(61, gx_ui+2, gy_ui, 12); vga_putc(61, gx_ui+3, gy_ui, 12); vga_putc(61, gx_ui+4, gy_ui, 12);
+            vga_putc(71, gx_ui+6, gy_ui, 14);  vga_putc(65, gx_ui+7, gy_ui, 14); vga_putc(77, gx_ui+8, gy_ui, 14);
+            vga_putc(69, gx_ui+9, gy_ui, 14);  vga_putc(32, gx_ui+10, gy_ui, 14);
+            vga_putc(79, gx_ui+11, gy_ui, 14); vga_putc(86, gx_ui+12, gy_ui, 14); vga_putc(69, gx_ui+13, gy_ui, 14);
+            vga_putc(82, gx_ui+14, gy_ui, 14);
+            vga_putc(61, gx_ui+16, gy_ui, 12); vga_putc(61, gx_ui+17, gy_ui, 12); vga_putc(61, gx_ui+18, gy_ui, 12);
+
+            gy_ui = gy_ui + 2;
+            vga_putc(83, gx_ui+7, gy_ui, 15); vga_putc(67, gx_ui+8, gy_ui, 15); vga_putc(79, gx_ui+9, gy_ui, 15);
+            vga_putc(82, gx_ui+10, gy_ui, 15); vga_putc(69, gx_ui+11, gy_ui, 15); vga_putc(58, gx_ui+12, gy_ui, 15);
+            
+            let f_h = score / 100;
+            let f_t = (score - (f_h * 100)) / 10;
+            let f_o = score - (f_h * 100) - (f_t * 10);
+            vga_putc(48 + f_h, gx_ui+14, gy_ui, 14);
+            vga_putc(48 + f_t, gx_ui+15, gy_ui, 14);
+            vga_putc(48 + f_o, gx_ui+16, gy_ui, 14);
+
+            gy_ui = gy_ui + 2;
+            vga_putc(83, gx_ui, gy_ui, 15);   vga_putc(80, gx_ui+1, gy_ui, 15); vga_putc(65, gx_ui+2, gy_ui, 15);
+            vga_putc(67, gx_ui+3, gy_ui, 15); vga_putc(69, gx_ui+4, gy_ui, 15); vga_putc(58, gx_ui+5, gy_ui, 15);
+            vga_putc(32, gx_ui+6, gy_ui, 15);
+            vga_putc(82, gx_ui+7, gy_ui, 10); vga_putc(101, gx_ui+8, gy_ui, 10);vga_putc(116, gx_ui+9, gy_ui, 10);
+            vga_putc(114, gx_ui+10, gy_ui, 10);vga_putc(121, gx_ui+11, gy_ui, 10);
+            vga_putc(32, gx_ui+12, gy_ui, 15);vga_putc(124, gx_ui+13, gy_ui, 14);vga_putc(32, gx_ui+14, gy_ui, 15);
+            vga_putc(69, gx_ui+15, gy_ui, 15);vga_putc(83, gx_ui+16, gy_ui, 15); vga_putc(67, gx_ui+17, gy_ui, 15);
+            vga_putc(58, gx_ui+18, gy_ui, 15);vga_putc(32, gx_ui+19, gy_ui, 15);
+            vga_putc(81, gx_ui+20, gy_ui, 12);vga_putc(117, gx_ui+21, gy_ui, 12);vga_putc(105, gx_ui+22, gy_ui, 12);
+            vga_putc(116, gx_ui+23, gy_ui, 12);
+
+            let waiting = 1;
+            while (waiting == 1) {
+                let decision = kbd_getc();
+                if (decision == 32) { waiting = 0; }
+                else if (decision == 27) { waiting = 0; app_running = 0; }
+            }
+        }
+    }
+}

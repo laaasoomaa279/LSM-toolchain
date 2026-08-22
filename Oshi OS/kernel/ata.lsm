@@ -1,0 +1,61 @@
+fulldev
+
+fct ata_wait_ready() -> void {
+    let timeout = 10000;
+    let status = port_in(503);
+    while (timeout > 0) {
+        if (status < 128) {
+            timeout = 0;
+        } else {
+            timeout = timeout - 1;
+            status = port_in(503);
+        }
+    }
+}
+
+fct ata_read_sector(lba: Int, target_mem: Int) -> void {
+    ata_wait_ready();
+    port_out(502, 224);
+    port_out(498, 1);
+    port_out(499, lba - ((lba / 256) * 256));
+    port_out(500, (lba / 256) - (((lba / 256) / 256) * 256));
+    port_out(501, (lba / 65536) - (((lba / 65536) / 256) * 256));
+    port_out(503, 32);
+    ata_wait_ready();
+
+    unsafe {
+        let i = 0;
+        while (i < 256) {
+            let word = port_in(496);
+            let b1 = word - ((word / 256) * 256);
+            let b2 = word / 256;
+            mmio_write(target_mem + (i * 2), b1);
+            mmio_write(target_mem + (i * 2) + 1, b2);
+            i = i + 1;
+        }
+    }
+}
+
+fct ata_write_sector(lba: Int, src_mem: Int) -> void {
+    ata_wait_ready();
+    port_out(502, 224);
+    port_out(498, 1);
+    port_out(499, lba - ((lba / 256) * 256));
+    port_out(500, (lba / 256) - (((lba / 256) / 256) * 256));
+    port_out(501, (lba / 65536) - (((lba / 65536) / 256) * 256));
+    port_out(503, 48);
+    ata_wait_ready();
+
+    unsafe {
+        let i = 0;
+        while (i < 256) {
+            let b1 = mmio_read(src_mem + (i * 2));
+            let b2 = mmio_read(src_mem + (i * 2) + 1);
+            let word = b1 + (b2 * 256);
+            port_out(496, word);
+            i = i + 1;
+        }
+    }
+    port_out(503, 231);
+    ata_wait_ready();
+}

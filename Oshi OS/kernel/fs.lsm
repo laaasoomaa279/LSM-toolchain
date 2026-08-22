@@ -1,0 +1,145 @@
+fulldev
+
+import "kernel/vga.lsm";
+import "kernel/ata.lsm";
+
+fct get_fs_root() -> Int { return 524288; }
+fct get_fs_meta_sector() -> Int { return 2048; }
+fct get_fs_data_sector_base() -> Int { return 2049; }
+
+fct fs_init() -> void {
+    unsafe {
+        let root = get_fs_root();
+        let sector = get_fs_meta_sector();
+        ata_read_sector(sector, root);
+
+        let sig1 = mmio_read(root + 0);
+        let sig2 = mmio_read(root + 1);
+
+        if (sig1 != 79 || sig2 != 83) { 
+            mmio_write(root + 0, 79);
+            mmio_write(root + 1, 83);
+            mmio_write(root + 2, 0);  
+            ata_write_sector(sector, root);
+        } else {
+            let count = mmio_read(root + 2);
+            let i = 0;
+            while (i < count) {
+                let data_ptr = fs_get_data_ptr(i);
+                let data_sec = get_fs_data_sector_base() + i;
+                ata_read_sector(data_sec, data_ptr);
+                i = i + 1;
+            }
+        }
+    }
+}
+
+fct fs_find(name_buf: Int, name_len: Int) -> Int {
+    unsafe {
+        let root = get_fs_root();
+        let count = mmio_read(root + 2);
+        let i = 0;
+        while (i < count) {
+            let meta = root + 16 + (i * 32);
+            let is_match = 1;
+            let j = 0;
+            while (j < name_len) {
+                if (mmio_read(meta + j) != mmio_read(name_buf + j)) { is_match = 0; }
+                j = j + 1;
+            }
+            if (mmio_read(meta + name_len) != 0) { is_match = 0; }
+            if (is_match == 1) { return i; }
+            i = i + 1;
+        }
+        return 0 - 1;
+    }
+}
+
+fct fs_touch(name_buf: Int, name_len: Int) -> Int {
+    unsafe {
+        if (name_len <= 0) { return 0; }
+        let exists = fs_find(name_buf, name_len);
+        if (exists != 0 - 1) { return 1; }
+
+        let root = get_fs_root();
+        let count = mmio_read(root + 2);
+        if (count >= 15) { return 0; }
+
+        let meta = root + 16 + (count * 32);
+        let j = 0;
+        while (j < name_len) {
+            mmio_write(meta + j, mmio_read(name_buf + j));
+            j = j + 1;
+        }
+        mmio_write(meta + name_len, 0);
+        mmio_write(meta + 16, 0); 
+        mmio_write(meta + 17, 0);
+
+        mmio_write(root + 2, count + 1);
+        ata_write_sector(get_fs_meta_sector(), root);
+        return 1;
+    }
+}
+
+fct fs_get_data_ptr(file_id: Int) -> Int { return 532480 + (file_id * 512); }
+
+fct fs_get_size(file_id: Int) -> Int {
+    unsafe {
+        let root = get_fs_root();
+        let meta = root + 16 + (file_id * 32);
+        let b1 = mmio_read(meta + 16);
+        let b2 = mmio_read(meta + 17);
+        return b1 + (b2 * 256);
+    }
+}
+
+fct fs_save_file(file_id: Int, new_size: Int) -> void {
+    unsafe {
+        let root = get_fs_root();
+        let meta = root + 16 + (file_id * 32);
+        mmio_write(meta + 16, new_size - ((new_size / 256) * 256));
+        mmio_write(meta + 17, new_size / 256);
+
+        ata_write_sector(get_fs_meta_sector(), root);
+        let data_ptr = fs_get_data_ptr(file_id);
+        let data_sec = get_fs_data_sector_base() + file_id;
+        ata_write_sector(data_sec, data_ptr);
+    }
+}
+
+fct fs_delete(file_id: Int) -> void {
+    unsafe {
+        let root = get_fs_root();
+        let count = mmio_read(root + 2);
+        if (file_id < 0 || file_id >= count) { return; }
+
+        let i = file_id;
+        while (i < count - 1) {
+            let src_meta = root + 16 + ((i + 1) * 32);
+            let dst_meta = root + 16 + (i * 32);
+            let j = 0;
+            while (j < 32) {
+                mmio_write(dst_meta + j, mmio_read(src_meta + j));
+                j = j + 1;
+            }
+            i = i + 1;
+        }
+
+        mmio_write(root + 2, count - 1);
+        ata_write_sector(get_fs_meta_sector(), root);
+    }
+}
+
+fct fs_rename(file_id: Int, new_name_buf: Int, new_name_len: Int) -> void {
+    unsafe {
+        let root = get_fs_root();
+        let meta = root + 16 + (file_id * 32);
+        let j = 0;
+        while (j < new_name_len) {
+            mmio_write(meta + j, mmio_read(new_name_buf + j));
+            j = j + 1;
+        }
+        mmio_write(meta + new_name_len, 0);
+        ata_write_sector(get_fs_meta_sector(), root);
+    }
+}

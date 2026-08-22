@@ -1,0 +1,25 @@
+fulldev
+
+fct port_outb(port: Int, val: Int) -> void {
+    unsafe {
+        port_out(port, val);
+    }
+}
+
+fct port_inb(port: Int) -> Int {
+    unsafe {
+        return port_in(port);
+    }
+}
+
+fct port_outw(port: Int, val: Int) -> void {
+    unsafe {
+        port_out(port, val);
+    }
+}
+
+fct port_inw(port: Int) -> Int {
+    unsafe {
+        return port_in(port);
+    }
+}

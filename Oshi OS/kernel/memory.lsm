@@ -1,0 +1,22 @@
+fulldev
+
+fct get_heap_start() -> Int { 
+    return 33554432; 
+}
+
+fct sys_get_allocated_bytes() -> Int {
+    unsafe {
+        let current_heap = mmio_read(262144);
+        if (current_heap <= 0) {
+            return 65536;
+        }
+        return current_heap;
+    }
+}
+
+fct sys_get_ram_used_kb() -> Int {
+    let bytes = sys_get_allocated_bytes();
+    let kb = bytes / 1024;
+    if (kb == 0) { return 64; }
+    return kb;
+}

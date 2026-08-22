@@ -1,0 +1,51 @@
+fulldev
+
+import "kernel/vga.lsm";
+import "kernel/system.lsm";
+import "kernel/keyboard.lsm";
+import "apps/shell.lsm";
+import "apps/editor.lsm";
+import "apps/calc.lsm";
+import "apps/snake.lsm";
+import "apps/pacman.lsm";
+import "apps/oshi.lsm";
+
+fct desktop_main() -> void {
+    let bg = 0;
+
+    while (1 == 1) {
+        vga_clear(bg);
+        sys_draw_status_bar();
+        vga_flip();
+
+        let waiting = 1;
+        while (waiting == 1) {
+            let ch = kbd_getc();
+
+            if (ch == 49) {
+                shell_main();
+                waiting = 0;
+            }
+            else if (ch == 50) {
+                editor_open(0);
+                waiting = 0;
+            }
+            else if (ch == 51) {
+                calc_main();
+                waiting = 0;
+            }
+            else if (ch == 52) {
+                snake_main();
+                waiting = 0;
+            }
+            else if (ch == 53) {
+                pacman_main();
+                waiting = 0;
+            }
+            else if (ch == 54) {
+                oshi_animated_app();
+                waiting = 0;
+            }
+        }
+    }
+}

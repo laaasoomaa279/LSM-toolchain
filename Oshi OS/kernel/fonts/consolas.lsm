@@ -1,0 +1,38 @@
+fulldev
+
+fct get_consolas_char_offset(ch: Int) -> Int {
+    unsafe {
+        // جداول أوفسيت الأحرف من consolas_italic_30_font_lookup
+        if (ch == 32) { return 0; }       // ' '
+        else if (ch == 33) { return 0; }  // '!'
+        else if (ch == 34) { return 168; } // '"'
+        else if (ch == 35) { return 245; } // '#'
+        else if (ch == 36) { return 587; } // '$'
+        else if (ch == 37) { return 987; } // '%'
+        else if (ch == 65) { return 7927; } // 'A'
+        else if (ch == 66) { return 8250; } // 'B'
+        else if (ch == 67) { return 8554; } // 'C'
+        else if (ch == 97) { return 17478; } // 'a'
+        else if (ch == 98) { return 17703; } // 'b'
+        else if (ch == 99) { return 17997; } // 'c'
+        return (ch - 32) * 200; // قيمة تقريبية آمنة لباقي الأحرف
+    }
+}
+
+fct get_consolas_char_width(ch: Int) -> Int {
+    if (ch == 32) { return 16; }
+    if (ch == 33) { return 8; }
+    if (ch == 34) { return 11; }
+    if (ch == 35) { return 18; }
+    if (ch == 36) { return 16; }
+    if (ch == 37) { return 21; }
+    return 16; // العرض الافتراضي لباقي أحرف Consolas
+}
+
+fct get_consolas_char_height(ch: Int) -> Int {
+    if (ch == 32) { return 30; }
+    if (ch == 33) { return 21; }
+    if (ch == 34) { return 7; }
+    if (ch == 35) { return 19; }
+    return 21; // الارتفاع الافتراضي
+}
