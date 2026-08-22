@@ -1,4 +1,4 @@
-```markdown
+
 # LSM Language Reference Manual
 
 A comprehensive specification and technical reference for the **LSM** systems programming language.
@@ -8,7 +8,7 @@ A comprehensive specification and technical reference for the **LSM** systems pr
 ## 1. Top-Level Directives
 
 ### `fulldev`
-Specifies that the compilation unit is operating in freestanding/bare-metal mode without runtime wrappers, boilerplate setup, or standard runtime assumptions[cite: 1, 2, 3].
+Specifies that the compilation unit is operating in freestanding/bare-metal mode without runtime wrappers, boilerplate setup, or standard runtime assumptions
 ```lsm
 fulldev
 
@@ -389,6 +389,3 @@ fct main() -> void {
 | `TOKEN_WHITESPACE` | `[ \t\r\n]+` | Skipped by Lexer (token boundary delimiter) |
 | `TOKEN_COMMENT_LINE`| `//[^\n]*` | Single-line comment; discarded during lexical analysis |
 | `TOKEN_EOF` | `\0` | End-Of-File marker signalling source stream completion |
-```
-
-```
