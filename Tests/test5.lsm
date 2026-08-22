@@ -11,6 +11,6 @@ fct execute_kernel_primitives() -> Int {
 fct main() -> Int {
     print("Executing Bare-Metal Unsafe Block...");
     let status: Int = execute_kernel_primitives();
-    print(status); // يطبع 1
+    print(status); // 1
     return status;
 }
