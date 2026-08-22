@@ -4,7 +4,6 @@ fct main() -> Int {
     print("=== Test 16: ALSM Native Registers Control ===");
 
     unsafe {
-        // تعبئة مسجلات المعالج مباشرة دون استخدام متغيرات لغة عالية المستوى
         setreg(rax, 500);
         setreg(rbx, 250);
 
