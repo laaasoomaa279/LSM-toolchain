@@ -1,4 +1,4 @@
-```markdown
+
 # LSM Toolchain
 
 The official compiler, assembler, and toolchain infrastructure for **LSM**—a statically typed, high-performance systems programming language designed for bare-metal kernel development, operating systems, JIT execution, and systems-level tooling.
@@ -47,8 +47,6 @@ LSM Source Code (.lsm)
        │
        ▼
    ELF Linker      ───►  Native Executables / Flat Binaries (.bin / .exe)
-
-```
 
 ---
 
