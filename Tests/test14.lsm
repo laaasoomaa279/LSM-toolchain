@@ -4,7 +4,6 @@ fct test_hardware_operations() -> Int {
     let dummy_buffer: [Int; 2];
     dummy_buffer[0] = 0;
 
-    // استخدام أول عنصر في مصفوفة المكدس كعنوان صالح للاختبار
     dummy_buffer[0] = 1337;
     let val: Int = dummy_buffer[0];
 
