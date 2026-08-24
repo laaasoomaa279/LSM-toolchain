@@ -96,89 +96,12 @@ Concrete Syntax Tree (CST)                         Abstract Syntax Tree (AST)
 
 ### 1. High-Level Ergonomics & Pattern Matching
 
-```lsm
-enum Status {
-    Ready,
-    Pending,
-    Failed
-}
-
-rec Task {
-    id;
-    priority;
-}
-
-fct process_task(task: Task) -> Ok(Int) {
-    if task.priority > 10 {
-        return Ok(1);
-    }
-    return Err(0);
-}
-
-fct handle_task_pipeline(task: Task) -> void {
-    let result = process_task(task);
-
-    match result {
-        Ok(code) => {
-            print("Task successfully dispatched with exit code:");
-            print(code);
-        }
-        Err(err) => {
-            print("Task scheduling failed.");
-        }
-    }
-}
-
-```
 
 ### 2. Bare-Metal Driver Development & Low-Level Control
 
-```lsm
-fulldev
-
-#[align("16")]
-rec FramebufferHeader {
-    width;
-    height;
-    pitch;
-    bpp;
-}
-
-fct init_graphics_pipeline(base_addr: Int, color: Int) -> void {
-    unsafe {
-        // Direct physical pointer casting and memory dereference
-        let fb_ptr = ptr<Int>(base_addr);
-        *fb_ptr = color;
-
-        // Atomic synchronizations and MMIO writing
-        atomic_store(base_addr + 4, 1);
-        mmio_write32(base_addr + 8, 0xFF00FF00);
-
-        // Hardware CPU management
-        cpu_cli();
-        outb(0x3D4, 0x0A);
-    }
-}
-
-```
 
 ### 3. Dynamic Native Interoperability
 
-```lsm
-fulldev
-
-extern "kernel32.dll" fct VirtualAlloc(lpAddress: Int, dwSize: Int, flAllocationType: Int, flProtect: Int) -> Int;
-extern "kernel32.dll" fct VirtualFree(lpAddress: Int, dwSize: Int, dwFreeType: Int) -> Int;
-
-fct allocate_executable_buffer(size: Int) -> Int {
-    // Allocation types: MEM_COMMIT | MEM_RESERVE (0x3000), PAGE_EXECUTE_READWRITE (0x40)
-    let buffer = VirtualAlloc(0, size, 12288, 64);
-    return buffer;
-}
-
-```
-
----
 
 ## Toolchain Installation & Source Build
 
