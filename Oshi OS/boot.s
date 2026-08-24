@@ -60,15 +60,14 @@ start:
     rep movsd
     pop ds
 
-    mov ah, 0x02
-    mov al, 128
-    mov ch, 0
-    mov cl, 2
-    mov dh, 0
+    mov si, dap1
+    mov ah, 0x42
     mov dl, [boot_drive]
-    mov bx, 0x1000
-    mov es, bx
-    xor bx, bx
+    int 0x13
+
+    mov si, dap2
+    mov ah, 0x42
+    mov dl, [boot_drive]
     int 0x13
 
     in al, 0x92
@@ -80,6 +79,23 @@ start:
     or al, 1
     mov cr0, eax
     jmp 0x08:init_32
+
+align 4
+dap1:
+    db 0x10
+    db 0
+    dw 100
+    dw 0x0000
+    dw 0x1000
+    dq 1
+
+dap2:
+    db 0x10
+    db 0
+    dw 100
+    dw 0x0000
+    dw 0x1C80
+    dq 101
 
 [bits 32]
 init_32:
@@ -115,7 +131,7 @@ init_32:
     mov cr3, eax
 
     mov eax, cr4
-    or eax, 0x20
+    or eax, 0x20 | (3 << 9)
     mov cr4, eax
 
     mov ecx, 0xC0000080
@@ -124,6 +140,8 @@ init_32:
     wrmsr
 
     mov eax, cr0
+    and ax, 0xFFFB
+    or ax, 0x0002
     or eax, 0x80000000
     mov cr0, eax
 
@@ -132,7 +150,7 @@ init_32:
 
 [bits 64]
 init_64:
-    mov rsp, 0x90000
+    mov rsp, 0x500000
     mov rbp, rsp
     and rsp, -16
 
