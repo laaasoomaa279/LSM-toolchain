@@ -75,7 +75,8 @@ enum class SSAOp {
     VolatileStore,
 
     AtomicRMW,
-    Phi
+    Phi,
+    VectorAdd
 };
 
 struct SSAValue {
@@ -130,4 +131,4 @@ struct SSAFunction {
     bool isInline = false;
 };
 
-#endif 
+#endif
