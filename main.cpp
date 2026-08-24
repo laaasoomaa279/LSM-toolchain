@@ -11,13 +11,10 @@
 #include "src/middleend/lowering/RegionLowering.hpp"
 #include "src/middleend/ssa/SSABuilder.hpp"
 
-
 #include "src/middleend/opt/OptimizationPassManager.hpp"
-
 
 #include "src/backend/regalloc/RegisterAllocator.hpp"
 #include "src/backend/regalloc/PhysicalRegister.hpp"
-
 
 #include "src/backend/x86_64/X86_64Encoder.hpp"
 #include "src/backend/x86_64/PeepholeX86.hpp"
@@ -26,25 +23,23 @@
 #include "src/backend/baremetal/BareMetalX86_32Encoder.hpp"
 #include "src/backend/baremetal/BareMetalX86ModernEncoder.hpp" 
 
-
 #include "src/backend/jit/JITEngine.hpp"
 #include "src/backend/linker/ELFBuilder.hpp"
 #include "src/backend/raw/RawBinaryBuilder.hpp"
 #include "src/loader/ModuleLoader.hpp"
-
 
 #include "src/runtime/sched/Scheduler.hpp"
 #include "tools/lsp/LanguageServer.hpp"
 
 void printUsage() {
     std::cout << "\033[1;36m========================================================\033[0m\n";
-    std::cout << "\033[1;32m      LSM (Language for Systems & Machines) Toolchain 2.0\033[0m\n";
+    std::cout << "\033[1;32m      LSM (Language for Systems & Machines) Toolchain v1.0.0\033[0m\n";
     std::cout << "\033[1;36m========================================================\033[0m\n";
     std::cout << "Usage:\n";
     std::cout << "  lsm run <file.lsm> [-O3]                         : Compile and execute via Multi-threaded JIT\n";
     std::cout << "  lsm build <file.lsm> [-O3] [-o out] [--m32]      : Build standalone executable\n";
-    std::cout << "  lsm build --baremetal <file.lsm> [--bootable]    : Export kernel binary (LSM 7 Legacy Engine)\n";
-    std::cout << "  lsm build --baremetal --modern <file.lsm>       : Export kernel binary (LSM 8 Modern Engine)\n";
+    std::cout << "  lsm build --baremetal <file.lsm> [--bootable]    : Export kernel binary (Standard Engine)\n";
+    std::cout << "  lsm build --baremetal --modern <file.lsm>       : Export kernel binary (Modern Engine)\n";
     std::cout << "  lsm --lsp                                        : Run Language Server Protocol for IDEs\n";
     std::cout << "  lsm --version                                    : Display version info\n";
 }
@@ -120,7 +115,8 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        
+        auto compileStart = std::chrono::high_resolution_clock::now();
+
         std::cout << "\033[1;34m[1/6] Parsing & Constructing AST/CST...\033[0m\n";
         auto rootProgram = std::make_unique<ProgramNode>();
         ModuleLoader loader;
@@ -130,12 +126,10 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        
         std::cout << "\033[1;34m[2/6] Monomorphizing Generics...\033[0m\n";
         Monomorphizer monomorphizer;
         monomorphizer.process(rootProgram.get());
 
-        
         std::cout << "\033[1;34m[3/6] Static Type Checking & Record Layout Computation...\033[0m\n";
         TypeChecker typeChecker(selectedArch);
         auto typeRes = typeChecker.checkProgram(rootProgram.get());
@@ -147,7 +141,6 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        
         std::cout << "\033[1;34m[4/6] Lowering Scopes & Generating SSA IR (Entry: " << entryPoint << ")...\033[0m\n";
         RegionLowering lowering;
         std::unique_ptr<ASTNode> astRoot = std::move(rootProgram);
@@ -158,7 +151,6 @@ int main(int argc, char* argv[]) {
         ssaBuilder.setEntryPoint(entryPoint);
         auto ssaProgram = ssaBuilder.buildProgram(static_cast<ProgramNode*>(astRoot.get()));
 
-        
         if (optimizeO3) {
             std::cout << "\033[1;33m[5/6] Running Optimization Passes (-O3: DCE, LICM, Constant Propagation, AV)...\033[0m\n";
             OptimizationPassManager optManager;
@@ -167,7 +159,6 @@ int main(int argc, char* argv[]) {
             std::cout << "\033[1;34m[5/6] Skipping Middle-End Optimizations (-O0)...\033[0m\n";
         }
 
-        
         std::cout << "\033[1;34m[6/6] Generating Native Machine Code...\033[0m\n";
         std::vector<uint8_t> machineCode;
 
@@ -176,16 +167,18 @@ int main(int argc, char* argv[]) {
                 BareMetalX86_32Encoder baremetal32Encoder;
                 machineCode = baremetal32Encoder.encodeProgram(ssaProgram);
             } else if (isModernEngine) {
-                
-                std::cout << "\033[1;32m[Info] Using Modern BareMetal Engine (LSM 8 Spec)\033[0m\n";
+                std::cout << "\033[1;32m[Info] Using Modern BareMetal Engine\033[0m\n";
                 BareMetalX86ModernEncoder modernEncoder;
                 machineCode = modernEncoder.encodeProgram(ssaProgram);
             } else {
-                
-                std::cout << "\033[1;32m[Info] Using Legacy Stable BareMetal Engine (LSM 7 Spec)\033[0m\n";
+                std::cout << "\033[1;32m[Info] Using Standard BareMetal Engine\033[0m\n";
                 BareMetalX86Encoder baremetalEncoder;
                 machineCode = baremetalEncoder.encodeProgram(ssaProgram);
             }
+
+            auto compileEnd = std::chrono::high_resolution_clock::now();
+            auto compileDurationUs = std::chrono::duration_cast<std::chrono::microseconds>(compileEnd - compileStart).count();
+            std::cout << "\033[1;32m[Compilation Finished in " << compileDurationUs / 1000.0 << " ms]\033[0m\n";
 
             if (isBootable) {
                 RawBinaryBuilder::buildBootableImage(outputFile, machineCode);
@@ -197,7 +190,6 @@ int main(int argc, char* argv[]) {
             return 0;
         }
 
-        
         X86_64Encoder hostedEncoder;
         for (const auto& stmt : static_cast<ProgramNode*>(astRoot.get())->stmts) {
             if (stmt && stmt->type == ASTNodeType::ExternFuncDecl) {
@@ -211,22 +203,26 @@ int main(int argc, char* argv[]) {
             machineCode = PeepholeX86::optimize(machineCode);
         }
 
+        auto compileEnd = std::chrono::high_resolution_clock::now();
+        auto compileDurationUs = std::chrono::duration_cast<std::chrono::microseconds>(compileEnd - compileStart).count();
+        std::cout << "\033[1;32m[Compilation Finished in " << compileDurationUs / 1000.0 << " ms]\033[0m\n";
+
         if (command == "run") {
             JITEngine jit;
             std::cout << "\033[1;32m----------------- [Execution Output] -----------------\033[0m\n";
-            auto startTime = std::chrono::high_resolution_clock::now();
+            auto runStartTime = std::chrono::high_resolution_clock::now();
 
             int64_t exitCode = jit.execute(machineCode);
 
-            auto endTime = std::chrono::high_resolution_clock::now();
-            auto durationMs = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+            auto runEndTime = std::chrono::high_resolution_clock::now();
+            auto runDurationUs = std::chrono::duration_cast<std::chrono::microseconds>(runEndTime - runStartTime).count();
 
             std::cout << "\033[1;32m------------------------------------------------------\033[0m\n";
-            std::cout << "\033[1;36m[Process Exited with Code: " << exitCode << " in " << durationMs / 1000.0 << " ms]\033[0m\n";
+            std::cout << "\033[1;36m[Process Exited with Code: " << exitCode << " | Execution Time: " << runDurationUs / 1000.0 << " ms]\033[0m\n";
         } 
         else if (command == "build") {
             ELFBuilder::buildExecutable(outputFile, machineCode, selectedArch);
-            std::cout << "\033[1;32m[Success] Standalone Executable built -> " << outputFile << "\033[0m\n";
+            std::cout << "\033[1;32m[Success] Standalone Executable built -> " << outputFile << " (" << machineCode.size() << " bytes)\033[0m\n";
         }
 
     } catch (const std::exception& e) {
