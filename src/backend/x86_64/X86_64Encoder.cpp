@@ -180,6 +180,16 @@ void X86_64Encoder::encodeInstruction(const SSAInstruction& inst) {
             break;
         }
 
+        case SSAOp::VectorAdd: {
+            if (inst.operands.size() >= 4) {
+                emitXmmValueLoad(0, inst.operands[0]);
+                emitXmmValueLoad(1, inst.operands[1]);
+                emitByte(0x66); emitByte(0x0F); emitByte(0x58); emitByte(0xC1);
+                if (!inst.result.name.empty()) emitXmmValueStore(0, inst.result.name);
+            }
+            break;
+        }
+
         case SSAOp::Copy: {
             if (inst.operands[0].type == LsmStaticType::Float64) {
                 emitXmmValueLoad(0, inst.operands[0]);
@@ -359,14 +369,12 @@ void X86_64Encoder::encodeInstruction(const SSAInstruction& inst) {
 
             emitREX(true, false, false, false); emitByte(0x81); emitByte(0xEC); emitInt32(shadowAlloc);
 
-            
             for (size_t i = 5; i < inst.operands.size(); ++i) {
                 int stackArgOffset = static_cast<int>((i - 1) * 8);
                 emitValueLoad(0, inst.operands[i]);
                 emitREX(true, false, false, false); emitByte(0x89); emitByte(0x84); emitByte(0x24); emitInt32(stackArgOffset);
             }
 
-            
             for (size_t i = 1; i < inst.operands.size() && i <= 4; ++i) {
                 size_t argIdx = i - 1;
                 if (inst.operands[i].type == LsmStaticType::Float64) {
@@ -457,7 +465,6 @@ void X86_64Encoder::encodeFunctionInternal(const SSAFunction& func) {
     if (!func.isNaked) {
         emitByte(0x55); 
         emitREX(true, false, false, false); emitByte(0x89); emitByte(0xE5); 
-        
         
         allocatedStackSize = 8192;
         emitREX(true, false, false, false); emitByte(0x81); emitByte(0xEC); emitInt32(allocatedStackSize);
